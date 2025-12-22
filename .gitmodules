@@ -1,0 +1,3 @@
+[submodule "tofu-stack-secrets"]
+	path = tofu-stack-secrets
+	url = git@github.com:majordoobie/tofu-stack-secrets.git
