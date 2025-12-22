@@ -1,0 +1,144 @@
+x-common-env: &common-env
+  PUID: 1000
+  PGID: 1000
+  TZ: America/New_York
+networks:
+  servarrnetwork:
+    driver: bridge
+services:
+  # -----------------------------------------------------------------------------------
+  ## VPN Tunnel service. This allows all the services that connect through the ports
+  ## to be forwareded to the VPN server that the service is assigned to
+  # -----------------------------------------------------------------------------------
+  gluetun:
+    image: qmcgaw/gluetun
+    container_name: gluetun
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    ports:
+      - 8000:8000 # gluetun built in web server http://<your-docker-host-ip>:8000
+      - 8080:8080 # qbittorrent web interface
+      - 6881:6881 # qbittorrent torrent port
+      - 9696:9696 # prowlarr
+      - 8191:8191 # flaresolverr
+    volumes:
+      - ./mounts/gluetun:/gluetun
+      - ./secrets/gluten_auth_config.toml:/gluetun/auth/config.toml:ro
+    environment:
+      VPN_SERVICE_PROVIDER: protonvpn
+      VPN_TYPE: wireguard
+      SERVER_COUNTRIES: Switzerland
+      WIREGUARD_PRIVATE_KEY_SECRETFILE: /run/secrets/wireguard_private_key
+    secrets:
+      - wireguard_private_key
+    networks:
+      - servarrnetwork
+    # Use built-in gluten VPN healthcheck
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - --header='X-API-Key: YF8NrLvGG7RtWpCc1rF8YZ' http://localhost:8000/v1/publicip/ip | grep -q '\"country\":\"Switzerland\"'"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+  # -----------------------------------------------------------------------------------
+  ## qbittorrent is a torrent downloader. It is currently set to use the network stack
+  ## of gluetun; meaning that it will be under the VPN when downloading
+  # -----------------------------------------------------------------------------------
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    environment:
+      !!merge <<: *common-env
+      WEBUI_PORT: 8080
+      TORRENTING_PORT: 6881
+    volumes:
+      - ./mounts/qbittorrent/appdata:/config
+      - ./mounts/media:/data
+    network_mode: "service:gluetun" # Routes ALL traffic through gluetun
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    healthcheck:
+      test: ping -c 1 www.google.com || exit 1
+      interval: 60s
+      retries: 3
+      start_period: 20s
+      timeout: 10s
+    restart: unless-stopped
+  # -----------------------------------------------------------------------------------
+  ## the next thing to set up are the *arr apps
+  #
+  # -----------------------------------------------------------------------------------
+  ## Set up the torrent indexer. This will index where to find the torrents.
+  ## Tools like Raddarr will then pass matches from prowlarr to qbittorrent
+  # -----------------------------------------------------------------------------------
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    environment:
+      !!merge <<: *common-env
+    volumes:
+      - ./mounts/prowlarr:/config
+    restart: unless-stopped
+    depends_on:
+      gluetun:
+        condition: service_healthy
+        restart: true
+    network_mode: service:gluetun
+  # -----------------------------------------------------------------------------------
+  # Setup sonarr used to manage TV shows and submit the torrent to qbittoreent
+  # -----------------------------------------------------------------------------------
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    restart: unless-stopped
+    environment:
+      !!merge <<: *common-env
+    volumes:
+      - ./mounts/sonarr:/config
+      - ./mounts/media:/data
+    ports:
+      - 8989:8989
+    networks:
+      - servarrnetwork
+    depends_on:
+      gluetun:
+        condition: service_healthy
+  # -----------------------------------------------------------------------------------
+  # Setup sonarr used to manage movies and submit the torrent to qbittoreent
+  # -----------------------------------------------------------------------------------
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    restart: unless-stopped
+    environment:
+      !!merge <<: *common-env
+    volumes:
+      - ./mounts/radarr:/config
+      - ./mounts/media:/data
+    ports:
+      - 7878:7878
+    networks:
+      - servarrnetwork
+    depends_on:
+      gluetun:
+        condition: service_healthy
+  # -----------------------------------------------------------------------------------
+  # FlareSolverr - Bypasses Cloudflare protection for indexers
+  # -----------------------------------------------------------------------------------
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    environment:
+      !!merge <<: *common-env
+    network_mode: service:gluetun
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    restart: unless-stopped
+secrets:
+  wireguard_private_key:
+    file: secrets/wireguard_private_key.txt
