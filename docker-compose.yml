@@ -1,11 +1,45 @@
 x-common-env: &common-env
-  PUID: 1000
-  PGID: 1000
+  PUID: 501
+  PGID: 20
   TZ: America/New_York
 networks:
   servarrnetwork:
     driver: bridge
 services:
+  # -----------------------------------------------------------------------------------
+  # Traefik - Reverse Proxy with SSL
+  # -----------------------------------------------------------------------------------
+  traefik:
+    image: traefik:v3.6
+    container_name: traefik
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8888:8080"  # Dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./tofu-stack-secrets/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./tofu-stack-secrets:/etc/traefik/dynamic:ro
+      - ./mounts/traefik/certs:/certs
+      - ./mounts/traefik/logs:/var/log/traefik
+    networks:
+      - servarrnetwork
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik-dashboard.rule=Host(`traefik.home.arpa`)"
+      - "traefik.http.routers.traefik-dashboard.entrypoints=websecure"
+      - "traefik.http.routers.traefik-dashboard.tls=true"
+      - "traefik.http.routers.traefik-dashboard.service=api@internal"
+      - "traefik.http.routers.traefik-dashboard-http.rule=Host(`traefik.home.arpa`)"
+      - "traefik.http.routers.traefik-dashboard-http.entrypoints=web"
+      - "traefik.http.routers.traefik-dashboard-http.middlewares=redirect-to-https"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
+    environment:
+      !!merge <<: *common-env
   # -----------------------------------------------------------------------------------
   ## VPN Tunnel service. This allows all the services that connect through the ports
   ## to be forwareded to the VPN server that the service is assigned to
@@ -18,7 +52,7 @@ services:
     devices:
       - /dev/net/tun:/dev/net/tun
     ports:
-      - 8000:8000 # gluetun built in web server http://<your-docker-host-ip>:8000
+      - 8000:8000 # gluetun built in web api
       - 8080:8080 # qbittorrent web interface
       - 6881:6881 # qbittorrent torrent port
       - 9696:9696 # prowlarr
@@ -35,13 +69,35 @@ services:
       - wireguard_private_key
     networks:
       - servarrnetwork
-    # Use built-in gluten VPN healthcheck
+    # Use built-in gluten VPN healthcheck (API key can only access status so yolo on showing it here)
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O - --header='X-API-Key: YF8NrLvGG7RtWpCc1rF8YZ' http://localhost:8000/v1/publicip/ip | grep -q '\"country\":\"Switzerland\"'"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 5s
+    labels:
+      # qBittorrent routing (network_mode: service:gluetun)
+      - "traefik.enable=true"
+      - "traefik.http.routers.qbittorrent.rule=Host(`qbittorrent.home.arpa`)"
+      - "traefik.http.routers.qbittorrent.entrypoints=websecure"
+      - "traefik.http.routers.qbittorrent.tls=true"
+      - "traefik.http.routers.qbittorrent.service=qbittorrent"
+      - "traefik.http.services.qbittorrent.loadbalancer.server.port=8080"
+      - "traefik.http.routers.qbittorrent-http.rule=Host(`qbittorrent.home.arpa`)"
+      - "traefik.http.routers.qbittorrent-http.entrypoints=web"
+      - "traefik.http.routers.qbittorrent-http.middlewares=redirect-to-https"
+      - "traefik.http.routers.qbittorrent-http.service=qbittorrent"
+      # Prowlarr routing (network_mode: service:gluetun)
+      - "traefik.http.routers.prowlarr.rule=Host(`prowlarr.home.arpa`)"
+      - "traefik.http.routers.prowlarr.entrypoints=websecure"
+      - "traefik.http.routers.prowlarr.tls=true"
+      - "traefik.http.routers.prowlarr.service=prowlarr"
+      - "traefik.http.services.prowlarr.loadbalancer.server.port=9696"
+      - "traefik.http.routers.prowlarr-http.rule=Host(`prowlarr.home.arpa`)"
+      - "traefik.http.routers.prowlarr-http.entrypoints=web"
+      - "traefik.http.routers.prowlarr-http.middlewares=redirect-to-https"
+      - "traefik.http.routers.prowlarr-http.service=prowlarr"
     restart: unless-stopped
   # -----------------------------------------------------------------------------------
   ## qbittorrent is a torrent downloader. It is currently set to use the network stack
@@ -56,8 +112,9 @@ services:
       TORRENTING_PORT: 6881
     volumes:
       - ./mounts/qbittorrent/appdata:/config
-      - ./mounts/media:/data
-    network_mode: "service:gluetun" # Routes ALL traffic through gluetun
+      - ./tofu-stack-secrets/qBittorrent.conf:/config/qBittorrent/qBittorrent.conf
+      - /Volumes/Plex-Storage/media/:/data
+    network_mode: "service:gluetun" # Routes ALL traffic through gluetun (Traefik labels are on gluetun service)
     depends_on:
       gluetun:
         condition: service_healthy
@@ -68,6 +125,42 @@ services:
       start_period: 20s
       timeout: 10s
     restart: unless-stopped
+
+  # -----------------------------------------------------------------------------------
+    # Client to subscribe to usenet sources
+  # -----------------------------------------------------------------------------------
+
+  nzbget:
+    image: lscr.io/linuxserver/nzbget:latest
+    container_name: nzbget
+    environment:
+      FILE__NZBGET_USER: /run/secrets/nzbget_user
+      FILE__NZBGET_PASS: /run/secrets/nzbget_pass
+      !!merge <<: *common-env
+    secrets:
+      - nzbget_user
+      - nzbget_pass
+    volumes:
+      - ./mounts/nzbget/appdata:/config
+      - /Volumes/Plex-Storage/media/:/data
+    depends_on:
+      gluetun:
+        condition: service_healthy
+        restart: true
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.nzbget.rule=Host(`nzbget.home.arpa`)"
+      - "traefik.http.routers.nzbget.entrypoints=websecure"
+      - "traefik.http.routers.nzbget.tls=true"
+      - "traefik.http.services.nzbget.loadbalancer.server.port=6789"
+      - "traefik.http.routers.nzbget-http.rule=Host(`nzbget.home.arpa`)"
+      - "traefik.http.routers.nzbget-http.entrypoints=web"
+    ports:
+      - 6789:6789
+    networks:
+      - servarrnetwork
+
   # -----------------------------------------------------------------------------------
   ## the next thing to set up are the *arr apps
   #
@@ -87,7 +180,7 @@ services:
       gluetun:
         condition: service_healthy
         restart: true
-    network_mode: service:gluetun
+    network_mode: service:gluetun  # Routes through gluetun (Traefik labels are on gluetun service)
   # -----------------------------------------------------------------------------------
   # Setup sonarr used to manage TV shows and submit the torrent to qbittoreent
   # -----------------------------------------------------------------------------------
@@ -99,7 +192,15 @@ services:
       !!merge <<: *common-env
     volumes:
       - ./mounts/sonarr:/config
-      - ./mounts/media:/data
+      - /Volumes/Plex-Storage/media/:/data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.sonarr.rule=Host(`sonarr.home.arpa`)"
+      - "traefik.http.routers.sonarr.entrypoints=websecure"
+      - "traefik.http.routers.sonarr.tls=true"
+      - "traefik.http.services.sonarr.loadbalancer.server.port=8989"
+      - "traefik.http.routers.sonarr-http.rule=Host(`sonarr.home.arpa`)"
+      - "traefik.http.routers.sonarr-http.entrypoints=web"
     ports:
       - 8989:8989
     networks:
@@ -118,7 +219,15 @@ services:
       !!merge <<: *common-env
     volumes:
       - ./mounts/radarr:/config
-      - ./mounts/media:/data
+      - /Volumes/Plex-Storage/media/:/data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.radarr.rule=Host(`radarr.home.arpa`)"
+      - "traefik.http.routers.radarr.entrypoints=websecure"
+      - "traefik.http.routers.radarr.tls=true"
+      - "traefik.http.services.radarr.loadbalancer.server.port=7878"
+      - "traefik.http.routers.radarr-http.rule=Host(`radarr.home.arpa`)"
+      - "traefik.http.routers.radarr-http.entrypoints=web"
     ports:
       - 7878:7878
     networks:
@@ -142,3 +251,7 @@ services:
 secrets:
   wireguard_private_key:
     file: tofu-stack-secrets/wireguard_private_key.txt
+  nzbget_pass:
+    file: tofu-stack-secrets/nzbget_pass.txt
+  nzbget_user:
+    file: tofu-stack-secrets/nzbget_user.txt
