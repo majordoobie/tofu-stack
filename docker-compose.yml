@@ -29,6 +29,7 @@ services:
       - servarrnetwork
     labels:
       - "traefik.enable=true"
+      # Traefik dashboard - local
       - "traefik.http.routers.traefik-dashboard.rule=Host(`traefik.home.arpa`)"
       - "traefik.http.routers.traefik-dashboard.entrypoints=websecure"
       - "traefik.http.routers.traefik-dashboard.tls=true"
@@ -38,6 +39,10 @@ services:
       - "traefik.http.routers.traefik-dashboard-http.middlewares=redirect-to-https"
       - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
       - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
+      # Traefik dashboard - Cloudflare tunnel
+      - "traefik.http.routers.traefik-dashboard-cf.rule=Host(`traefik.majordoob.com`)"
+      - "traefik.http.routers.traefik-dashboard-cf.entrypoints=web"
+      - "traefik.http.routers.traefik-dashboard-cf.service=api@internal"
     environment:
       !!merge <<: *common-env
   # -----------------------------------------------------------------------------------
@@ -77,8 +82,8 @@ services:
       retries: 3
       start_period: 5s
     labels:
-      # qBittorrent routing (network_mode: service:gluetun)
       - "traefik.enable=true"
+      # qBittorrent routing - local (network_mode: service:gluetun)
       - "traefik.http.routers.qbittorrent.rule=Host(`qbittorrent.home.arpa`)"
       - "traefik.http.routers.qbittorrent.entrypoints=websecure"
       - "traefik.http.routers.qbittorrent.tls=true"
@@ -88,7 +93,11 @@ services:
       - "traefik.http.routers.qbittorrent-http.entrypoints=web"
       - "traefik.http.routers.qbittorrent-http.middlewares=redirect-to-https"
       - "traefik.http.routers.qbittorrent-http.service=qbittorrent"
-      # Prowlarr routing (network_mode: service:gluetun)
+      # qBittorrent routing - Cloudflare tunnel
+      - "traefik.http.routers.qbittorrent-cf.rule=Host(`qbittorrent.majordoob.com`)"
+      - "traefik.http.routers.qbittorrent-cf.entrypoints=web"
+      - "traefik.http.routers.qbittorrent-cf.service=qbittorrent"
+      # Prowlarr routing - local (network_mode: service:gluetun)
       - "traefik.http.routers.prowlarr.rule=Host(`prowlarr.home.arpa`)"
       - "traefik.http.routers.prowlarr.entrypoints=websecure"
       - "traefik.http.routers.prowlarr.tls=true"
@@ -98,6 +107,10 @@ services:
       - "traefik.http.routers.prowlarr-http.entrypoints=web"
       - "traefik.http.routers.prowlarr-http.middlewares=redirect-to-https"
       - "traefik.http.routers.prowlarr-http.service=prowlarr"
+      # Prowlarr routing - Cloudflare tunnel
+      - "traefik.http.routers.prowlarr-cf.rule=Host(`prowlarr.majordoob.com`)"
+      - "traefik.http.routers.prowlarr-cf.entrypoints=web"
+      - "traefik.http.routers.prowlarr-cf.service=prowlarr"
     restart: unless-stopped
   # -----------------------------------------------------------------------------------
   ## qbittorrent is a torrent downloader. It is currently set to use the network stack
@@ -150,12 +163,17 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
+      # nzbget - local
       - "traefik.http.routers.nzbget.rule=Host(`nzbget.home.arpa`)"
       - "traefik.http.routers.nzbget.entrypoints=websecure"
       - "traefik.http.routers.nzbget.tls=true"
       - "traefik.http.services.nzbget.loadbalancer.server.port=6789"
       - "traefik.http.routers.nzbget-http.rule=Host(`nzbget.home.arpa`)"
       - "traefik.http.routers.nzbget-http.entrypoints=web"
+      # nzbget - Cloudflare tunnel
+      - "traefik.http.routers.nzbget-cf.rule=Host(`nzbget.majordoob.com`)"
+      - "traefik.http.routers.nzbget-cf.entrypoints=web"
+      - "traefik.http.routers.nzbget-cf.service=nzbget"
     ports:
       - 6789:6789
     networks:
@@ -195,12 +213,17 @@ services:
       - /Volumes/Plex-Storage/media/:/data
     labels:
       - "traefik.enable=true"
+      # sonarr - local
       - "traefik.http.routers.sonarr.rule=Host(`sonarr.home.arpa`)"
       - "traefik.http.routers.sonarr.entrypoints=websecure"
       - "traefik.http.routers.sonarr.tls=true"
       - "traefik.http.services.sonarr.loadbalancer.server.port=8989"
       - "traefik.http.routers.sonarr-http.rule=Host(`sonarr.home.arpa`)"
       - "traefik.http.routers.sonarr-http.entrypoints=web"
+      # sonarr - Cloudflare tunnel
+      - "traefik.http.routers.sonarr-cf.rule=Host(`sonarr.majordoob.com`)"
+      - "traefik.http.routers.sonarr-cf.entrypoints=web"
+      - "traefik.http.routers.sonarr-cf.service=sonarr"
     ports:
       - 8989:8989
     networks:
@@ -222,12 +245,17 @@ services:
       - /Volumes/Plex-Storage/media/:/data
     labels:
       - "traefik.enable=true"
+      # radarr - local
       - "traefik.http.routers.radarr.rule=Host(`radarr.home.arpa`)"
       - "traefik.http.routers.radarr.entrypoints=websecure"
       - "traefik.http.routers.radarr.tls=true"
       - "traefik.http.services.radarr.loadbalancer.server.port=7878"
       - "traefik.http.routers.radarr-http.rule=Host(`radarr.home.arpa`)"
       - "traefik.http.routers.radarr-http.entrypoints=web"
+      # radarr - Cloudflare tunnel
+      - "traefik.http.routers.radarr-cf.rule=Host(`radarr.majordoob.com`)"
+      - "traefik.http.routers.radarr-cf.entrypoints=web"
+      - "traefik.http.routers.radarr-cf.service=radarr"
     ports:
       - 7878:7878
     networks:
@@ -235,6 +263,59 @@ services:
     depends_on:
       gluetun:
         condition: service_healthy
+  # -----------------------------------------------------------------------------------
+  # Plex Media Server
+  # -----------------------------------------------------------------------------------
+  plex:
+    image: lscr.io/linuxserver/plex:latest
+    container_name: plex
+    restart: unless-stopped
+    environment:
+      !!merge <<: *common-env
+      VERSION: docker
+      PLEX_CLAIM: claim-oQzCXB2LJEr-P8oDoE3-
+    volumes:
+      - ./mounts/plex:/config
+      - /Volumes/Plex-Storage/media/movies/:/movies
+      - /Volumes/Plex-Storage/media/shows/:/tv
+    ports:
+      - 32400:32400
+    networks:
+      - servarrnetwork
+    labels:
+      - "traefik.enable=true"
+      # plex - local
+      - "traefik.http.routers.plex.rule=Host(`plex.home.arpa`)"
+      - "traefik.http.routers.plex.entrypoints=websecure"
+      - "traefik.http.routers.plex.tls=true"
+      - "traefik.http.services.plex.loadbalancer.server.port=32400"
+      - "traefik.http.routers.plex-http.rule=Host(`plex.home.arpa`)"
+      - "traefik.http.routers.plex-http.entrypoints=web"
+      # plex - Cloudflare tunnel
+      - "traefik.http.routers.plex-cf.rule=Host(`plex.majordoob.com`)"
+      - "traefik.http.routers.plex-cf.entrypoints=web"
+      - "traefik.http.routers.plex-cf.service=plex"
+  # -----------------------------------------------------------------------------------
+  # Cloudflare Tunnel - Secure external access without port forwarding
+  # -----------------------------------------------------------------------------------
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared
+    restart: unless-stopped
+    command: tunnel run --token-file /run/secrets/tunnel_token
+    secrets:
+      - tunnel_token
+    networks:
+      - servarrnetwork
+    depends_on:
+      - traefik
+    healthcheck:
+      test: ["CMD", "cloudflared", "tunnel", "info"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
   # -----------------------------------------------------------------------------------
   # FlareSolverr - Bypasses Cloudflare protection for indexers
   # -----------------------------------------------------------------------------------
@@ -255,3 +336,5 @@ secrets:
     file: tofu-stack-secrets/nzbget_pass.txt
   nzbget_user:
     file: tofu-stack-secrets/nzbget_user.txt
+  tunnel_token:
+    file: tofu-stack-secrets/cloudflare_tunnel_key.txt
