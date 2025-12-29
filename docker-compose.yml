@@ -7,6 +7,20 @@ networks:
     driver: bridge
 services:
   # -----------------------------------------------------------------------------------
+  # Autoheal - Restarts unhealthy containers (gluetun only)
+  # -----------------------------------------------------------------------------------
+  autoheal:
+    image: willfarrell/autoheal
+    container_name: autoheal
+    restart: unless-stopped
+    environment:
+      AUTOHEAL_CONTAINER_LABEL: autoheal
+      AUTOHEAL_INTERVAL: 60
+      AUTOHEAL_START_PERIOD: 300
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  # -----------------------------------------------------------------------------------
   # Traefik - Reverse Proxy with SSL
   # -----------------------------------------------------------------------------------
   traefik:
@@ -82,6 +96,7 @@ services:
       retries: 3
       start_period: 5s
     labels:
+      - "autoheal=true"
       - "traefik.enable=true"
       # qBittorrent routing - local (network_mode: service:gluetun)
       - "traefik.http.routers.qbittorrent.rule=Host(`qbittorrent.home.arpa`)"
@@ -310,11 +325,72 @@ services:
     depends_on:
       - traefik
     healthcheck:
-      test: ["CMD", "cloudflared", "tunnel", "info"]
+      test: ["CMD", "cloudflared", "tunnel", "ready", "--metrics", "localhost:20241"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 30s
+
+  # -----------------------------------------------------------------------------------
+  # Tdarr - Automated media transcoding (adds AAC audio tracks for HomePod compatibility)
+  # -----------------------------------------------------------------------------------
+  tdarr:
+    image: ghcr.io/haveagitgat/tdarr:latest
+    container_name: tdarr
+    restart: unless-stopped
+    environment:
+      !!merge <<: *common-env
+      serverIP: 0.0.0.0
+      serverPort: 8266
+      webUIPort: 8265
+      internalNode: "true"
+      inContainer: "true"
+      ffmpegVersion: 6
+      nodeName: InternalNode
+    volumes:
+      - ./mounts/tdarr/server:/app/server
+      - ./mounts/tdarr/configs:/app/configs
+      - ./mounts/tdarr/logs:/app/logs
+      - /Volumes/Plex-Storage/media:/media
+      - /Volumes/Plex-Storage/tdarr_cache:/temp
+    ports:
+      - 8265:8265  # Web UI
+      - 8266:8266  # Server port
+    networks:
+      - servarrnetwork
+    labels:
+      - "traefik.enable=true"
+      # tdarr - local
+      - "traefik.http.routers.tdarr.rule=Host(`tdarr.home.arpa`)"
+      - "traefik.http.routers.tdarr.entrypoints=websecure"
+      - "traefik.http.routers.tdarr.tls=true"
+      - "traefik.http.services.tdarr.loadbalancer.server.port=8265"
+      - "traefik.http.routers.tdarr-http.rule=Host(`tdarr.home.arpa`)"
+      - "traefik.http.routers.tdarr-http.entrypoints=web"
+      - "traefik.http.routers.tdarr-http.middlewares=redirect-to-https"
+
+  # -----------------------------------------------------------------------------------
+  # Portainer - Docker management web UI
+  # -----------------------------------------------------------------------------------
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./mounts/portainer:/data
+    networks:
+      - servarrnetwork
+    labels:
+      - "traefik.enable=true"
+      # portainer - local
+      - "traefik.http.routers.portainer.rule=Host(`portainer.home.arpa`)"
+      - "traefik.http.routers.portainer.entrypoints=websecure"
+      - "traefik.http.routers.portainer.tls=true"
+      - "traefik.http.services.portainer.loadbalancer.server.port=9000"
+      - "traefik.http.routers.portainer-http.rule=Host(`portainer.home.arpa`)"
+      - "traefik.http.routers.portainer-http.entrypoints=web"
+      - "traefik.http.routers.portainer-http.middlewares=redirect-to-https"
 
   # -----------------------------------------------------------------------------------
   # FlareSolverr - Bypasses Cloudflare protection for indexers
