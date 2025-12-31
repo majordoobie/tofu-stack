@@ -90,13 +90,13 @@ services:
       - openvpn_pass
     networks:
       - servarrnetwork
-    # Use built-in gluten VPN healthcheck (API key can only access status so yolo on showing it here)
+    # Healthcheck tests actual VPN connectivity, not just cached API response
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O - --header='X-API-Key: YF8NrLvGG7RtWpCc1rF8YZ' http://localhost:8000/v1/publicip/ip | grep -q '\"country\":\"Iceland\"'"]
+      test: ["CMD", "ping", "-c", "1", "-W", "5", "8.8.8.8"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 5s
+      start_period: 30s
     labels:
       - "autoheal=true"
       - "traefik.enable=true"
