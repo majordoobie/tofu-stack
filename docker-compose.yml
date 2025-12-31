@@ -81,16 +81,18 @@ services:
       - ./tofu-stack-secrets/gluten_auth_config.toml:/gluetun/auth/config.toml:ro
     environment:
       VPN_SERVICE_PROVIDER: protonvpn
-      VPN_TYPE: wireguard
-      SERVER_COUNTRIES: Switzerland
-      WIREGUARD_PRIVATE_KEY_SECRETFILE: /run/secrets/wireguard_private_key
+      VPN_TYPE: openvpn
+      SERVER_COUNTRIES: Iceland
+      OPENVPN_USER_SECRETFILE: /run/secrets/openvpn_user
+      OPENVPN_PASSWORD_SECRETFILE: /run/secrets/openvpn_pass
     secrets:
-      - wireguard_private_key
+      - openvpn_user
+      - openvpn_pass
     networks:
       - servarrnetwork
     # Use built-in gluten VPN healthcheck (API key can only access status so yolo on showing it here)
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O - --header='X-API-Key: YF8NrLvGG7RtWpCc1rF8YZ' http://localhost:8000/v1/publicip/ip | grep -q '\"country\":\"Switzerland\"'"]
+      test: ["CMD-SHELL", "wget -q -O - --header='X-API-Key: YF8NrLvGG7RtWpCc1rF8YZ' http://localhost:8000/v1/publicip/ip | grep -q '\"country\":\"Iceland\"'"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -134,6 +136,7 @@ services:
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
     container_name: qbittorrent
+    cpus: 1
     environment:
       !!merge <<: *common-env
       WEBUI_PORT: 8080
@@ -161,6 +164,7 @@ services:
   nzbget:
     image: lscr.io/linuxserver/nzbget:latest
     container_name: nzbget
+    cpus: 2
     environment:
       FILE__NZBGET_USER: /run/secrets/nzbget_user
       FILE__NZBGET_PASS: /run/secrets/nzbget_pass
@@ -170,6 +174,7 @@ services:
       - nzbget_pass
     volumes:
       - ./mounts/nzbget/appdata:/config
+      - ./tofu-stack-secrets/nzbget.conf:/config/nzbget.conf
       - /Volumes/Plex-Storage/media/:/data
     depends_on:
       gluetun:
@@ -337,6 +342,7 @@ services:
   tdarr:
     image: ghcr.io/haveagitgat/tdarr:latest
     container_name: tdarr
+    cpus: 4
     restart: unless-stopped
     environment:
       !!merge <<: *common-env
@@ -369,28 +375,6 @@ services:
       - "traefik.http.routers.tdarr-http.entrypoints=web"
       - "traefik.http.routers.tdarr-http.middlewares=redirect-to-https"
 
-  # -----------------------------------------------------------------------------------
-  # Portainer - Docker management web UI
-  # -----------------------------------------------------------------------------------
-  portainer:
-    image: portainer/portainer-ce:latest
-    container_name: portainer
-    restart: unless-stopped
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./mounts/portainer:/data
-    networks:
-      - servarrnetwork
-    labels:
-      - "traefik.enable=true"
-      # portainer - local
-      - "traefik.http.routers.portainer.rule=Host(`portainer.home.arpa`)"
-      - "traefik.http.routers.portainer.entrypoints=websecure"
-      - "traefik.http.routers.portainer.tls=true"
-      - "traefik.http.services.portainer.loadbalancer.server.port=9000"
-      - "traefik.http.routers.portainer-http.rule=Host(`portainer.home.arpa`)"
-      - "traefik.http.routers.portainer-http.entrypoints=web"
-      - "traefik.http.routers.portainer-http.middlewares=redirect-to-https"
 
   # -----------------------------------------------------------------------------------
   # FlareSolverr - Bypasses Cloudflare protection for indexers
@@ -406,8 +390,10 @@ services:
         condition: service_healthy
     restart: unless-stopped
 secrets:
-  wireguard_private_key:
-    file: tofu-stack-secrets/wireguard_private_key.txt
+  openvpn_user:
+    file: tofu-stack-secrets/openvpn_user.txt
+  openvpn_pass:
+    file: tofu-stack-secrets/openvpn_pass.txt
   nzbget_pass:
     file: tofu-stack-secrets/nzbget_pass.txt
   nzbget_user:
