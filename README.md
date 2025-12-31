@@ -1,3 +1,40 @@
+## Storage Architecture (SSD + HDD)
+
+Downloads and transcoding happen on the SSD (`/Volumes/Working-Storage`) to avoid I/O contention with Plex playback from the HDD (`/Volumes/Plex-Storage`).
+
+### Service File Flow
+
+| Service | Reads From | Writes To | Notes |
+|---------|------------|-----------|-------|
+| **qBittorrent** | - | `/working/qbittorrent/completed/` (SSD) | Downloads land here |
+| **NZBGet** | - | `/working/nzbget/completed/` (SSD) | Downloads land here |
+| **Radarr** | `/working/.../completed/` (SSD) | `/data/movies/` (HDD) | Imports & moves to library |
+| **Sonarr** | `/working/.../completed/` (SSD) | `/data/shows/` (HDD) | Imports & moves to library |
+| **Tdarr** | `/media/` (HDD) | `/media/` (HDD) | Transcodes in-place, cache on SSD (`/temp`) |
+| **Plex** | `/movies/` & `/tv/` (HDD) | - | Read-only media serving |
+
+### Container Mount Summary
+
+| Container | `/working` | `/data` | `/media` | `/temp` |
+|-----------|------------|---------|----------|---------|
+| qBittorrent | SSD | HDD | - | - |
+| NZBGet | SSD | HDD | - | - |
+| Radarr | SSD | HDD | - | - |
+| Sonarr | SSD | HDD | - | - |
+| Tdarr | - | - | HDD | SSD |
+| Plex | - | - | - | - |
+
+*Plex mounts `/movies` and `/tv` directly from HDD*
+
+### Data Flow
+```
+Download → SSD → Radarr/Sonarr import → HDD → Plex serves
+                                      ↓
+                               Tdarr transcodes (cache on SSD)
+```
+
+---
+
 ## Home Assistant Bridge (LaunchAgent)
 
 This setup uses a macOS LaunchAgent to automatically forward traffic from port 8124 to Home Assistant (192.168.1.5:8123) using socat.

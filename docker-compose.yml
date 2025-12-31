@@ -144,7 +144,8 @@ services:
     volumes:
       - ./mounts/qbittorrent/appdata:/config
       - ./tofu-stack-secrets/qBittorrent.conf:/config/qBittorrent/qBittorrent.conf
-      - /Volumes/Plex-Storage/media/:/data
+      - /Volumes/Working-Storage/downloads:/working  # SSD - active downloads
+      - /Volumes/Plex-Storage/media/:/data           # HDD - final media storage
     network_mode: "service:gluetun" # Routes ALL traffic through gluetun (Traefik labels are on gluetun service)
     depends_on:
       gluetun:
@@ -175,7 +176,8 @@ services:
     volumes:
       - ./mounts/nzbget/appdata:/config
       - ./tofu-stack-secrets/nzbget.conf:/config/nzbget.conf
-      - /Volumes/Plex-Storage/media/:/data
+      - /Volumes/Working-Storage/downloads:/working  # SSD - active downloads
+      - /Volumes/Plex-Storage/media/:/data           # HDD - final media storage
     depends_on:
       gluetun:
         condition: service_healthy
@@ -230,7 +232,8 @@ services:
       !!merge <<: *common-env
     volumes:
       - ./mounts/sonarr:/config
-      - /Volumes/Plex-Storage/media/:/data
+      - /Volumes/Working-Storage/downloads:/working  # SSD - grab downloads from here
+      - /Volumes/Plex-Storage/media/:/data           # HDD - final media storage
     labels:
       - "traefik.enable=true"
       # sonarr - local
@@ -262,7 +265,8 @@ services:
       !!merge <<: *common-env
     volumes:
       - ./mounts/radarr:/config
-      - /Volumes/Plex-Storage/media/:/data
+      - /Volumes/Working-Storage/downloads:/working  # SSD - grab downloads from here
+      - /Volumes/Plex-Storage/media/:/data           # HDD - final media storage
     labels:
       - "traefik.enable=true"
       # radarr - local
@@ -358,7 +362,7 @@ services:
       - ./mounts/tdarr/configs:/app/configs
       - ./mounts/tdarr/logs:/app/logs
       - /Volumes/Plex-Storage/media:/media
-      - /Volumes/Plex-Storage/tdarr_cache:/temp
+      - /Volumes/Working-Storage/tdarr_cache:/temp  # SSD - transcode cache
     ports:
       - 8265:8265  # Web UI
       - 8266:8266  # Server port
