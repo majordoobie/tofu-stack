@@ -184,3 +184,80 @@ socat (LaunchAgent)
     ↓
 Home Assistant → http://192.168.1.5:8123
 ```
+
+---
+
+## Gluetun Monitor (LaunchAgent)
+
+This LaunchAgent monitors the gluetun VPN container and automatically restarts the VPN stack when issues are detected. It uses `docker compose` instead of the Docker API to properly trigger the dependency chain and restart all dependent containers.
+
+### Why This Exists
+
+When gluetun restarts, containers using `network_mode: service:gluetun` (qbittorrent, prowlarr, flaresolverr) lose their network and exit. The `autoheal` container only monitors "unhealthy" containers, not "exited" ones, so these containers would stay dead until manually restarted.
+
+This monitor solves that by:
+1. Detecting when gluetun becomes unhealthy
+2. Detecting when dependent containers have exited
+3. Using `docker compose up -d --force-recreate` to restart everything properly
+
+### Setup
+
+The LaunchAgent plist is at `~/Library/LaunchAgents/com.tofu-stack.gluetun-monitor.plist` and runs the script at `scripts/gluetun-monitor.sh`.
+
+**Load the service:**
+```bash
+launchctl load ~/Library/LaunchAgents/com.tofu-stack.gluetun-monitor.plist
+```
+
+### Management Commands
+
+```bash
+# Check if service is running
+launchctl list | grep gluetun-monitor
+
+# View logs
+tail -f ~/containers/tofu-stack/logs/gluetun-monitor.log
+
+# Stop the service
+launchctl unload ~/Library/LaunchAgents/com.tofu-stack.gluetun-monitor.plist
+
+# Start the service
+launchctl load ~/Library/LaunchAgents/com.tofu-stack.gluetun-monitor.plist
+
+# Restart the service
+launchctl unload ~/Library/LaunchAgents/com.tofu-stack.gluetun-monitor.plist && \
+launchctl load ~/Library/LaunchAgents/com.tofu-stack.gluetun-monitor.plist
+```
+
+### How It Works
+
+1. **Health Check Loop** (every 60 seconds):
+   - Checks if any dependent containers (qbittorrent, prowlarr, flaresolverr) are exited
+   - Checks if gluetun is unhealthy
+
+2. **Exited Containers** (gluetun healthy):
+   - Runs `docker compose up -d qbittorrent prowlarr flaresolverr` to restart them
+
+3. **Gluetun Unhealthy** (3 consecutive failures):
+   - Runs `docker compose up -d gluetun --force-recreate`
+   - Waits for gluetun to become healthy
+   - Runs `docker compose up -d qbittorrent prowlarr flaresolverr --force-recreate`
+
+### Log Output Example
+
+```
+2026-01-03 17:15:20 - WARNING: flaresolverr is exited
+2026-01-03 17:15:20 - Restarting exited dependent containers...
+2026-01-03 17:15:28 - Dependent containers restarted
+2026-01-03 17:15:28 - Gluetun recovered (was unhealthy for 1 checks)
+```
+
+### Troubleshooting
+
+**Service not running after reboot:**
+- Verify plist exists: `ls -la ~/Library/LaunchAgents/com.tofu-stack.gluetun-monitor.plist`
+- Check for errors: `cat ~/containers/tofu-stack/logs/gluetun-monitor-stderr.log`
+
+**Containers still not restarting:**
+- Check the monitor log: `tail -20 ~/containers/tofu-stack/logs/gluetun-monitor.log`
+- Verify docker compose works: `cd ~/containers/tofu-stack && docker compose ps`
