@@ -11,7 +11,7 @@ Downloads and transcoding happen on the SSD (`/Volumes/Working-Storage`) to avoi
 | **Radarr** | `/working/.../completed/` (SSD) | `/data/movies/` (HDD) | Imports & moves to library |
 | **Sonarr** | `/working/.../completed/` (SSD) | `/data/shows/` (HDD) | Imports & moves to library |
 | **Tdarr** | `/media/` (HDD) | `/media/` (HDD) | Transcodes in-place, cache on SSD (`/temp`) |
-| **Plex** | `/movies/` & `/tv/` (HDD) | - | Read-only media serving |
+| **Plex** (host) | `/Volumes/Plex-Storage/media/` (HDD) | - | Read-only media serving (native macOS) |
 
 ### Container Mount Summary
 
@@ -24,7 +24,7 @@ Downloads and transcoding happen on the SSD (`/Volumes/Working-Storage`) to avoi
 | Tdarr | - | - | HDD | SSD |
 | Plex | - | - | - | - |
 
-*Plex mounts `/movies` and `/tv` directly from HDD*
+*Plex runs on the host (not in Docker) and accesses media directly from `/Volumes/Plex-Storage/media/`*
 
 ### Data Flow
 ```
@@ -261,3 +261,79 @@ launchctl load ~/Library/LaunchAgents/com.tofu-stack.gluetun-monitor.plist
 **Containers still not restarting:**
 - Check the monitor log: `tail -20 ~/containers/tofu-stack/logs/gluetun-monitor.log`
 - Verify docker compose works: `cd ~/containers/tofu-stack && docker compose ps`
+
+---
+
+## Plex Media Server (Native macOS)
+
+Plex runs natively on macOS (not in Docker) for better hardware transcoding support and simpler networking.
+
+### Installation
+
+Installed via Homebrew cask:
+```bash
+brew install --cask plex-media-server
+```
+
+### Management Commands
+
+```bash
+# Start Plex
+open -a "Plex Media Server"
+
+# Stop Plex
+pkill -f "Plex Media Server"
+
+# Check if running
+pgrep -l -f "Plex Media Server"
+
+# Check port binding
+lsof -i :32400
+```
+
+### Auto-Start on Boot
+
+Plex is a macOS app, not a brew service. To have Plex start automatically at login:
+
+1. Open **System Settings** → **General** → **Login Items**
+2. Click **+** under "Open at Login"
+3. Navigate to `/Applications/Plex Media Server.app` and add it
+
+### Configuration
+
+| Item | Location |
+|------|----------|
+| Config | `~/Library/Application Support/Plex Media Server/` |
+| Logs | `~/Library/Logs/Plex Media Server/` |
+| Web UI | `http://localhost:32400/web` |
+
+### Media Paths
+
+| Library | Path |
+|---------|------|
+| Movies | `/Volumes/Plex-Storage/media/movies` |
+| TV Shows | `/Volumes/Plex-Storage/media/shows` |
+
+### Traefik Routing
+
+Plex is configured as an external service in `traefik-dynamic.yml`, routing to `host.docker.internal:32400`.
+
+**Access URLs:**
+- Local: `https://plex.home.arpa` or `http://localhost:32400/web`
+- External: `https://plex.majordoob.com` (via Cloudflare tunnel)
+
+### Troubleshooting
+
+**Plex not starting:**
+```bash
+# Check if another process is using port 32400
+lsof -i :32400
+
+# Check Plex logs
+tail -50 ~/Library/Logs/Plex\ Media\ Server/Plex\ Media\ Server.log
+```
+
+**Traefik can't reach Plex:**
+- Verify Plex is running: `pgrep -l -f "Plex Media Server"`
+- Check port is bound: `lsof -i :32400`
+- Test direct access: `curl -I http://localhost:32400/web`

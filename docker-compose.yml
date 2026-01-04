@@ -300,37 +300,9 @@ services:
       gluetun:
         condition: service_healthy
   # -----------------------------------------------------------------------------------
-  # Plex Media Server
+  # Plex Media Server - MOVED TO HOST (native macOS install)
+  # Traefik routing configured in traefik-dynamic.yml
   # -----------------------------------------------------------------------------------
-  plex:
-    image: lscr.io/linuxserver/plex:latest
-    container_name: plex
-    restart: unless-stopped
-    environment:
-      !!merge <<: *common-env
-      VERSION: docker
-      PLEX_CLAIM: claim-oQzCXB2LJEr-P8oDoE3-
-    volumes:
-      - ./mounts/plex:/config
-      - /Volumes/Plex-Storage/media/movies/:/movies
-      - /Volumes/Plex-Storage/media/shows/:/tv
-    ports:
-      - 32400:32400
-    networks:
-      - servarrnetwork
-    labels:
-      - "traefik.enable=true"
-      # plex - local
-      - "traefik.http.routers.plex.rule=Host(`plex.home.arpa`)"
-      - "traefik.http.routers.plex.entrypoints=websecure"
-      - "traefik.http.routers.plex.tls=true"
-      - "traefik.http.services.plex.loadbalancer.server.port=32400"
-      - "traefik.http.routers.plex-http.rule=Host(`plex.home.arpa`)"
-      - "traefik.http.routers.plex-http.entrypoints=web"
-      # plex - Cloudflare tunnel
-      - "traefik.http.routers.plex-cf.rule=Host(`plex.majordoob.com`)"
-      - "traefik.http.routers.plex-cf.entrypoints=web"
-      - "traefik.http.routers.plex-cf.service=plex"
   # -----------------------------------------------------------------------------------
   # Cloudflare Tunnel - Secure external access without port forwarding
   # -----------------------------------------------------------------------------------
@@ -414,6 +386,67 @@ services:
     labels:
       - "autoheal=true"
     restart: unless-stopped
+
+  # -----------------------------------------------------------------------------------
+  # Tautulli - Plex monitoring, statistics, and notifications
+  # -----------------------------------------------------------------------------------
+  tautulli:
+    image: lscr.io/linuxserver/tautulli:latest
+    container_name: tautulli
+    restart: unless-stopped
+    environment:
+      !!merge <<: *common-env
+    volumes:
+      - ./mounts/tautulli:/config
+    ports:
+      - 8181:8181
+    networks:
+      - servarrnetwork
+    labels:
+      - "traefik.enable=true"
+      # tautulli - local
+      - "traefik.http.routers.tautulli.rule=Host(`tautulli.home.arpa`)"
+      - "traefik.http.routers.tautulli.entrypoints=websecure"
+      - "traefik.http.routers.tautulli.tls=true"
+      - "traefik.http.services.tautulli.loadbalancer.server.port=8181"
+      - "traefik.http.routers.tautulli-http.rule=Host(`tautulli.home.arpa`)"
+      - "traefik.http.routers.tautulli-http.entrypoints=web"
+      - "traefik.http.routers.tautulli-http.middlewares=redirect-to-https"
+      # tautulli - Cloudflare tunnel
+      - "traefik.http.routers.tautulli-cf.rule=Host(`tautulli.majordoob.com`)"
+      - "traefik.http.routers.tautulli-cf.entrypoints=web"
+      - "traefik.http.routers.tautulli-cf.service=tautulli"
+
+  # -----------------------------------------------------------------------------------
+  # Overseerr - Media request management for Plex
+  # -----------------------------------------------------------------------------------
+  overseerr:
+    image: lscr.io/linuxserver/overseerr:latest
+    container_name: overseerr
+    restart: unless-stopped
+    environment:
+      !!merge <<: *common-env
+    volumes:
+      - ./mounts/overseerr:/config
+    ports:
+      - 5055:5055
+    networks:
+      - servarrnetwork
+    labels:
+      - "traefik.enable=true"
+      # overseerr - local
+      - "traefik.http.routers.overseerr.rule=Host(`overseerr.home.arpa`)"
+      - "traefik.http.routers.overseerr.entrypoints=websecure"
+      - "traefik.http.routers.overseerr.tls=true"
+      - "traefik.http.services.overseerr.loadbalancer.server.port=5055"
+      - "traefik.http.routers.overseerr-http.rule=Host(`overseerr.home.arpa`)"
+      - "traefik.http.routers.overseerr-http.entrypoints=web"
+      - "traefik.http.routers.overseerr-http.middlewares=redirect-to-https"
+      # overseerr - Cloudflare tunnel
+      - "traefik.http.routers.overseerr-cf.rule=Host(`overseerr.majordoob.com`)"
+      - "traefik.http.routers.overseerr-cf.entrypoints=web"
+      - "traefik.http.routers.overseerr-cf.service=overseerr"
+
 secrets:
   openvpn_user:
     file: tofu-stack-secrets/openvpn_user.txt
