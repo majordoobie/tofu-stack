@@ -300,7 +300,7 @@ services:
       gluetun:
         condition: service_healthy
   # -----------------------------------------------------------------------------------
-  # Plex Media Server - MOVED TO HOST (native macOS install)
+  # Jellyfin Media Server - runs natively on macOS (not in Docker)
   # Traefik routing configured in traefik-dynamic.yml
   # -----------------------------------------------------------------------------------
   # -----------------------------------------------------------------------------------
@@ -388,46 +388,73 @@ services:
     restart: unless-stopped
 
   # -----------------------------------------------------------------------------------
-  # Tautulli - Plex monitoring, statistics, and notifications
+  # Jellystat - Jellyfin monitoring and statistics (replaces Tautulli)
   # -----------------------------------------------------------------------------------
-  tautulli:
-    image: lscr.io/linuxserver/tautulli:latest
-    container_name: tautulli
+  jellystat-db:
+    image: 'postgres:15.2'
+    shm_size: 1gb
+    container_name: jellystat-db
     restart: unless-stopped
     environment:
-      !!merge <<: *common-env
+      POSTGRES_USER_FILE: /run/secrets/jellystat_db_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/jellystat_db_pass
+    secrets:
+      - jellystat_db_user
+      - jellystat_db_pass
     volumes:
-      - ./mounts/tautulli:/config
-    ports:
-      - 8181:8181
+      - ./mounts/jellystat_db:/var/lib/postgresql/data
     networks:
       - servarrnetwork
+
+  jellystat:
+    image: cyfershepard/jellystat:latest
+    container_name: jellystat
+    restart: unless-stopped
+    environment:
+      !!merge <<: *common-env
+      FILE__POSTGRES_USER: /run/secrets/jellystat_db_user
+      FILE__POSTGRES_PASSWORD: /run/secrets/jellystat_db_pass
+      FILE__JWT_SECRET: /run/secrets/jellystat_jwt_secret
+      POSTGRES_IP: jellystat-db
+      POSTGRES_PORT: 5432
+    secrets:
+      - jellystat_db_user
+      - jellystat_db_pass
+      - jellystat_jwt_secret
+    volumes:
+      - ./mounts/jellystat:/app/backend/backup-data
+    ports:
+      - 3000:3000
+    networks:
+      - servarrnetwork
+    depends_on:
+      - jellystat-db
     labels:
       - "traefik.enable=true"
-      # tautulli - local
-      - "traefik.http.routers.tautulli.rule=Host(`tautulli.home.arpa`)"
-      - "traefik.http.routers.tautulli.entrypoints=websecure"
-      - "traefik.http.routers.tautulli.tls=true"
-      - "traefik.http.services.tautulli.loadbalancer.server.port=8181"
-      - "traefik.http.routers.tautulli-http.rule=Host(`tautulli.home.arpa`)"
-      - "traefik.http.routers.tautulli-http.entrypoints=web"
-      - "traefik.http.routers.tautulli-http.middlewares=redirect-to-https"
-      # tautulli - Cloudflare tunnel
-      - "traefik.http.routers.tautulli-cf.rule=Host(`tautulli.majordoob.com`)"
-      - "traefik.http.routers.tautulli-cf.entrypoints=web"
-      - "traefik.http.routers.tautulli-cf.service=tautulli"
+      # jellystat - local
+      - "traefik.http.routers.jellystat.rule=Host(`jellystat.home.arpa`)"
+      - "traefik.http.routers.jellystat.entrypoints=websecure"
+      - "traefik.http.routers.jellystat.tls=true"
+      - "traefik.http.services.jellystat.loadbalancer.server.port=3000"
+      - "traefik.http.routers.jellystat-http.rule=Host(`jellystat.home.arpa`)"
+      - "traefik.http.routers.jellystat-http.entrypoints=web"
+      - "traefik.http.routers.jellystat-http.middlewares=redirect-to-https"
+      # jellystat - Cloudflare tunnel
+      - "traefik.http.routers.jellystat-cf.rule=Host(`jellystat.majordoob.com`)"
+      - "traefik.http.routers.jellystat-cf.entrypoints=web"
+      - "traefik.http.routers.jellystat-cf.service=jellystat"
 
   # -----------------------------------------------------------------------------------
-  # Overseerr - Media request management for Plex
+  # Jellyseerr - Media request management for Jellyfin
   # -----------------------------------------------------------------------------------
-  overseerr:
-    image: lscr.io/linuxserver/overseerr:latest
-    container_name: overseerr
+  jellyseerr:
+    image: fallenbagel/jellyseerr:latest
+    container_name: jellyseerr
     restart: unless-stopped
     environment:
       !!merge <<: *common-env
     volumes:
-      - ./mounts/overseerr:/config
+      - ./mounts/jellyseerr:/app/config
     ports:
       - 5055:5055
     networks:
@@ -435,17 +462,17 @@ services:
     labels:
       - "traefik.enable=true"
       # overseerr - local
-      - "traefik.http.routers.overseerr.rule=Host(`overseerr.home.arpa`)"
-      - "traefik.http.routers.overseerr.entrypoints=websecure"
-      - "traefik.http.routers.overseerr.tls=true"
-      - "traefik.http.services.overseerr.loadbalancer.server.port=5055"
-      - "traefik.http.routers.overseerr-http.rule=Host(`overseerr.home.arpa`)"
-      - "traefik.http.routers.overseerr-http.entrypoints=web"
-      - "traefik.http.routers.overseerr-http.middlewares=redirect-to-https"
-      # overseerr - Cloudflare tunnel
-      - "traefik.http.routers.overseerr-cf.rule=Host(`overseerr.majordoob.com`)"
-      - "traefik.http.routers.overseerr-cf.entrypoints=web"
-      - "traefik.http.routers.overseerr-cf.service=overseerr"
+      - "traefik.http.routers.jellyseerr.rule=Host(`jellyseerr.home.arpa`)"
+      - "traefik.http.routers.jellyseerr.entrypoints=websecure"
+      - "traefik.http.routers.jellyseerr.tls=true"
+      - "traefik.http.services.jellyseerr.loadbalancer.server.port=5055"
+      - "traefik.http.routers.jellyseerr-http.rule=Host(`jellyseerr.home.arpa`)"
+      - "traefik.http.routers.jellyseerr-http.entrypoints=web"
+      - "traefik.http.routers.jellyseerr-http.middlewares=redirect-to-https"
+      # jellyseerr - Cloudflare tunnel
+      - "traefik.http.routers.jellyseerr-cf.rule=Host(`jellyseerr.majordoob.com`)"
+      - "traefik.http.routers.jellyseerr-cf.entrypoints=web"
+      - "traefik.http.routers.jellyseerr-cf.service=jellyseerr"
 
 secrets:
   openvpn_user:
@@ -458,3 +485,9 @@ secrets:
     file: tofu-stack-secrets/nzbget_user.txt
   tunnel_token:
     file: tofu-stack-secrets/cloudflare_tunnel_key.txt
+  jellystat_db_pass:
+    file: tofu-stack-secrets/jellystat_db_pass.txt
+  jellystat_jwt_secret:
+    file: tofu-stack-secrets/jellystat_jwt_secret.txt
+  jellystat_db_user:
+    file: tofu-stack-secrets/jellystat_db_user.txt
