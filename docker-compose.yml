@@ -169,7 +169,7 @@ services:
   nzbget:
     image: lscr.io/linuxserver/nzbget:latest
     container_name: nzbget
-    cpus: 4
+    cpus: 3
     environment:
       FILE__NZBGET_USER: /run/secrets/nzbget_user
       FILE__NZBGET_PASS: /run/secrets/nzbget_pass

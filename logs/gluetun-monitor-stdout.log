@@ -67,3 +67,368 @@
 2026-01-03 21:03:50 -   Container flaresolverr  Started
 2026-01-03 21:03:50 -   Container prowlarr  Started
 2026-01-03 21:03:50 - VPN stack restart complete
+2026-01-03 23:30:17 - Gluetun unhealthy (count: 1/3)
+2026-01-03 23:31:18 - Gluetun recovered (was unhealthy for 1 checks)
+2026-01-04 04:12:36 - WARNING: flaresolverr is exited
+2026-01-04 04:12:36 - Restarting exited dependent containers...
+2026-01-04 04:12:41 -   Container gluetun  Running
+2026-01-04 04:12:41 -   Container qbittorrent  Running
+2026-01-04 04:12:41 -   Container prowlarr  Running
+2026-01-04 04:12:41 -   Container flaresolverr  Running
+2026-01-04 04:12:41 -   Container gluetun  Waiting
+2026-01-04 04:12:41 -   Container gluetun  Waiting
+2026-01-04 04:12:41 -   Container gluetun  Waiting
+2026-01-04 04:12:41 -   Container gluetun  Healthy
+2026-01-04 04:12:42 -   Container gluetun  Healthy
+2026-01-04 04:12:42 -   Container gluetun  Healthy
+2026-01-04 04:12:42 - Dependent containers restarted
+2026-01-04 04:37:13 - Gluetun unhealthy (count: 1/3)
+2026-01-04 04:38:14 - Gluetun recovered (was unhealthy for 1 checks)
+2026-01-04 04:45:24 - Gluetun unhealthy (count: 1/3)
+2026-01-04 04:46:33 - Gluetun recovered (was unhealthy for 1 checks)
+2026-01-04 04:49:39 - WARNING: qbittorrent is exited
+2026-01-04 04:49:39 - Restarting exited dependent containers...
+2026-01-04 04:49:40 -   Container gluetun  Running
+2026-01-04 04:49:40 -   Container qbittorrent  Created
+2026-01-04 04:49:40 -   Container flaresolverr  Running
+2026-01-04 04:49:40 -   Container prowlarr  Running
+2026-01-04 04:49:40 -   Container gluetun  Waiting
+2026-01-04 04:49:40 -   Container gluetun  Waiting
+2026-01-04 04:49:40 -   Container gluetun  Waiting
+2026-01-04 04:49:40 -   Container gluetun  Healthy
+2026-01-04 04:49:40 -   Container qbittorrent  Starting
+2026-01-04 04:49:40 -   Container gluetun  Healthy
+2026-01-04 04:49:40 -   Container gluetun  Healthy
+2026-01-04 04:49:41 -   Container qbittorrent  Started
+2026-01-04 04:49:41 - Dependent containers restarted
+2026-01-04 05:11:31 - Gluetun unhealthy (count: 1/3)
+2026-01-04 05:12:32 - Gluetun unhealthy (count: 2/3)
+2026-01-04 05:13:41 - Gluetun recovered (was unhealthy for 2 checks)
+2026-01-04 05:15:14 - Gluetun unhealthy (count: 1/3)
+2026-01-04 05:16:14 - Gluetun recovered (was unhealthy for 1 checks)
+2026-01-04 05:18:18 - Gluetun unhealthy (count: 1/3)
+2026-01-04 05:19:18 - Gluetun unhealthy (count: 2/3)
+2026-01-04 05:20:19 - Gluetun unhealthy (count: 3/3)
+2026-01-04 05:20:19 - Restarting VPN stack via docker compose...
+2026-01-04 05:20:20 -   Container gluetun  Recreate
+2026-01-04 05:20:23 -   Container gluetun  Recreated
+2026-01-04 05:20:23 -   Container gluetun  Starting
+2026-01-04 05:20:25 -   Container gluetun  Started
+2026-01-04 05:20:25 - Waiting for gluetun to become healthy...
+2026-01-04 05:22:31 - Gluetun is healthy
+2026-01-04 05:22:31 - Restarting dependent services...
+2026-01-04 05:22:35 -   Container gluetun  Running
+2026-01-04 05:22:35 -   Container prowlarr  Recreate
+2026-01-04 05:22:35 -   Container flaresolverr  Recreate
+2026-01-04 05:22:35 -   Container qbittorrent  Recreate
+2026-01-04 05:22:35 -   Container prowlarr  Recreated
+2026-01-04 05:22:35 -   Container qbittorrent  Recreated
+2026-01-04 05:22:36 -   Container flaresolverr  Recreated
+2026-01-04 05:22:36 -   Container gluetun  Waiting
+2026-01-04 05:22:36 -   Container gluetun  Waiting
+2026-01-04 05:22:36 -   Container gluetun  Waiting
+2026-01-04 05:22:36 -   Container gluetun  Healthy
+2026-01-04 05:22:36 -   Container prowlarr  Starting
+2026-01-04 05:22:36 -   Container gluetun  Healthy
+2026-01-04 05:22:36 -   Container flaresolverr  Starting
+2026-01-04 05:22:36 -   Container gluetun  Healthy
+2026-01-04 05:22:36 -   Container qbittorrent  Starting
+2026-01-04 05:22:37 -   Container qbittorrent  Started
+2026-01-04 05:22:37 -   Container flaresolverr  Started
+2026-01-04 05:22:37 -   Container prowlarr  Started
+2026-01-04 05:22:37 - VPN stack restart complete
+2026-01-04 05:51:15 - WARNING: flaresolverr is exited
+2026-01-04 05:51:15 - Restarting exited dependent containers...
+2026-01-04 05:51:16 -   Container gluetun  Running
+2026-01-04 05:51:16 -   Container flaresolverr  Created
+2026-01-04 05:51:16 -   Container qbittorrent  Running
+2026-01-04 05:51:16 -   Container prowlarr  Running
+2026-01-04 05:51:17 -   Container gluetun  Waiting
+2026-01-04 05:51:17 -   Container gluetun  Waiting
+2026-01-04 05:51:17 -   Container gluetun  Waiting
+2026-01-04 05:51:17 -   Container gluetun  Healthy
+2026-01-04 05:51:17 -   Container gluetun  Healthy
+2026-01-04 05:51:17 -   Container gluetun  Healthy
+2026-01-04 05:51:17 -   Container flaresolverr  Starting
+2026-01-04 05:51:18 -   Container flaresolverr  Started
+2026-01-04 05:51:18 - Dependent containers restarted
+2026-01-04 07:35:59 - Gluetun unhealthy (count: 1/3)
+2026-01-04 07:37:01 - Gluetun unhealthy (count: 2/3)
+2026-01-04 07:38:02 - Gluetun unhealthy (count: 3/3)
+2026-01-04 07:38:02 - Restarting VPN stack via docker compose...
+2026-01-04 07:38:03 -   Container gluetun  Recreate
+2026-01-04 07:38:07 -   Container gluetun  Recreated
+2026-01-04 07:38:07 -   Container gluetun  Starting
+2026-01-04 07:38:09 -   Container gluetun  Started
+2026-01-04 07:38:09 - Waiting for gluetun to become healthy...
+2026-01-04 07:38:29 - Gluetun is healthy
+2026-01-04 07:38:29 - Restarting dependent services...
+2026-01-04 07:38:29 -   Container gluetun  Running
+2026-01-04 07:38:29 -   Container flaresolverr  Recreate
+2026-01-04 07:38:29 -   Container qbittorrent  Recreate
+2026-01-04 07:38:29 -   Container prowlarr  Recreate
+2026-01-04 07:38:30 -   Container flaresolverr  Recreated
+2026-01-04 07:38:35 -   Container qbittorrent  Recreated
+2026-01-04 07:38:35 -   Container prowlarr  Recreated
+2026-01-04 07:38:35 -   Container gluetun  Waiting
+2026-01-04 07:38:35 -   Container gluetun  Waiting
+2026-01-04 07:38:35 -   Container gluetun  Waiting
+2026-01-04 07:38:35 -   Container gluetun  Healthy
+2026-01-04 07:38:35 -   Container qbittorrent  Starting
+2026-01-04 07:38:35 -   Container gluetun  Healthy
+2026-01-04 07:38:35 -   Container prowlarr  Starting
+2026-01-04 07:38:35 -   Container gluetun  Healthy
+2026-01-04 07:38:35 -   Container flaresolverr  Starting
+2026-01-04 07:38:37 -   Container flaresolverr  Started
+2026-01-04 07:38:37 -   Container qbittorrent  Started
+2026-01-04 07:38:37 -   Container prowlarr  Started
+2026-01-04 07:38:37 - VPN stack restart complete
+2026-01-04 08:24:55 - Gluetun unhealthy (count: 1/3)
+2026-01-04 08:25:56 - Gluetun recovered (was unhealthy for 1 checks)
+2026-01-04 08:40:11 - Gluetun unhealthy (count: 1/3)
+2026-01-04 08:41:12 - Gluetun recovered (was unhealthy for 1 checks)
+2026-01-04 09:25:18 - Gluetun unhealthy (count: 1/3)
+2026-01-04 09:26:18 - Gluetun recovered (was unhealthy for 1 checks)
+2026-01-04 10:24:25 - Gluetun unhealthy (count: 1/3)
+2026-01-04 10:25:45 - Gluetun recovered (was unhealthy for 1 checks)
+2026-01-04 10:28:47 - Gluetun unhealthy (count: 1/3)
+2026-01-04 10:30:06 - Gluetun recovered (was unhealthy for 1 checks)
+2026-01-04 10:36:11 - Gluetun unhealthy (count: 1/3)
+2026-01-04 10:37:12 - Gluetun recovered (was unhealthy for 1 checks)
+2026-01-04 12:05:41 - Gluetun unhealthy (count: 1/3)
+2026-01-04 12:06:44 - Gluetun recovered (was unhealthy for 1 checks)
+2026-01-04 12:36:38 - WARNING: flaresolverr is exited
+2026-01-04 12:36:38 - Restarting exited dependent containers...
+2026-01-04 12:36:42 -   Container gluetun  Running
+2026-01-04 12:36:42 -   Container qbittorrent  Running
+2026-01-04 12:36:42 -   Container flaresolverr  Running
+2026-01-04 12:36:42 -   Container prowlarr  Running
+2026-01-04 12:36:42 -   Container gluetun  Waiting
+2026-01-04 12:36:42 -   Container gluetun  Waiting
+2026-01-04 12:36:42 -   Container gluetun  Waiting
+2026-01-04 12:36:43 -   Container gluetun  Healthy
+2026-01-04 12:36:43 -   Container gluetun  Healthy
+2026-01-04 12:36:43 -   Container gluetun  Healthy
+2026-01-04 12:36:43 - Dependent containers restarted
+2026-01-04 12:58:10 - Gluetun unhealthy (count: 1/3)
+2026-01-04 12:59:12 - Gluetun recovered (was unhealthy for 1 checks)
+2026-01-04 13:23:31 - Gluetun unhealthy (count: 1/3)
+2026-01-04 13:24:32 - Gluetun unhealthy (count: 2/3)
+2026-01-04 13:25:34 - Gluetun recovered (was unhealthy for 2 checks)
+2026-01-04 13:35:57 - Gluetun unhealthy (count: 1/3)
+2026-01-04 13:37:02 - Gluetun recovered (was unhealthy for 1 checks)
+2026-01-04 13:39:11 - Gluetun unhealthy (count: 1/3)
+2026-01-04 13:40:12 - Gluetun recovered (was unhealthy for 1 checks)
+2026-01-04 13:48:04 - Gluetun unhealthy (count: 1/3)
+2026-01-04 13:49:06 - Gluetun recovered (was unhealthy for 1 checks)
+2026-01-04 15:31:21 - Gluetun unhealthy (count: 1/3)
+2026-01-04 15:36:32 - Gluetun unhealthy (count: 2/3)
+2026-01-04 15:41:42 - Gluetun unhealthy (count: 3/3)
+2026-01-04 15:41:42 - Restarting VPN stack via docker compose...
+2026-01-04 15:42:45 -   unable to get image 'qmcgaw/gluetun': error during connect: Get "http://%2FUsers%2Ftanjiro%2F.orbstack%2Frun%2Fdocker.sock/v1.47/images/qmcgaw/gluetun/json": EOF
+2026-01-04 15:42:45 - Waiting for gluetun to become healthy...
+2026-01-04 16:08:13 - Gluetun is healthy
+2026-01-04 16:08:13 - Restarting dependent services...
+2026-01-04 16:08:13 -   Container gluetun  Running
+2026-01-04 16:08:13 -   Container qbittorrent  Recreate
+2026-01-04 16:08:13 -   Container flaresolverr  Recreate
+2026-01-04 16:08:13 -   Container prowlarr  Recreate
+2026-01-04 16:08:14 -   Container flaresolverr  Recreated
+2026-01-04 16:08:17 -   Container prowlarr  Recreated
+2026-01-04 16:08:19 -   Container qbittorrent  Recreated
+2026-01-04 16:08:19 -   Container gluetun  Waiting
+2026-01-04 16:08:19 -   Container gluetun  Waiting
+2026-01-04 16:08:19 -   Container gluetun  Waiting
+2026-01-04 16:08:20 -   Container gluetun  Healthy
+2026-01-04 16:08:20 -   Container gluetun  Healthy
+2026-01-04 16:08:20 -   Container flaresolverr  Starting
+2026-01-04 16:08:20 -   Container prowlarr  Starting
+2026-01-04 16:08:20 -   Container gluetun  Healthy
+2026-01-04 16:08:20 -   Container qbittorrent  Starting
+2026-01-04 16:08:20 -   Container flaresolverr  Started
+2026-01-04 16:08:20 -   Container qbittorrent  Started
+2026-01-04 16:08:20 -   Container prowlarr  Started
+2026-01-04 16:08:20 - VPN stack restart complete
+2026-01-04 20:50:01 - Gluetun unhealthy (count: 1/3)
+2026-01-04 20:55:09 - Gluetun unhealthy (count: 2/3)
+2026-01-04 21:00:17 - Gluetun unhealthy (count: 3/3)
+2026-01-04 21:00:17 - Restarting VPN stack via docker compose...
+2026-01-04 21:01:21 -   unable to get image 'qmcgaw/gluetun': error during connect: Get "http://%2FUsers%2Ftanjiro%2F.orbstack%2Frun%2Fdocker.sock/v1.47/images/qmcgaw/gluetun/json": EOF
+2026-01-04 21:01:21 - Waiting for gluetun to become healthy...
+2026-01-04 21:06:10 - Gluetun is healthy
+2026-01-04 21:06:10 - Restarting dependent services...
+2026-01-04 21:06:10 -   Container gluetun  Running
+2026-01-04 21:06:10 -   Container prowlarr  Recreate
+2026-01-04 21:06:10 -   Container flaresolverr  Recreate
+2026-01-04 21:06:10 -   Container qbittorrent  Recreate
+2026-01-04 21:06:10 -   Container flaresolverr  Recreated
+2026-01-04 21:06:14 -   Container prowlarr  Recreated
+2026-01-04 21:06:16 -   Container qbittorrent  Recreated
+2026-01-04 21:06:16 -   Container gluetun  Waiting
+2026-01-04 21:06:16 -   Container gluetun  Waiting
+2026-01-04 21:06:16 -   Container gluetun  Waiting
+2026-01-04 21:06:17 -   Container gluetun  Healthy
+2026-01-04 21:06:17 -   Container gluetun  Healthy
+2026-01-04 21:06:17 -   Container qbittorrent  Starting
+2026-01-04 21:06:17 -   Container prowlarr  Starting
+2026-01-04 21:06:17 -   Container gluetun  Healthy
+2026-01-04 21:06:17 -   Container flaresolverr  Starting
+2026-01-04 21:06:17 -   Container prowlarr  Started
+2026-01-04 21:06:17 -   Container flaresolverr  Started
+2026-01-04 21:06:17 -   Container qbittorrent  Started
+2026-01-04 21:06:17 - VPN stack restart complete
+2026-01-04 22:35:56 - Gluetun unhealthy (count: 1/3)
+2026-01-04 22:36:56 - Gluetun recovered (was unhealthy for 1 checks)
+2026-01-05 02:30:26 - Gluetun unhealthy (count: 1/3)
+2026-01-05 02:31:26 - Gluetun recovered (was unhealthy for 1 checks)
+2026-01-05 08:41:15 - WARNING: flaresolverr is exited
+2026-01-05 08:41:15 - Restarting exited dependent containers...
+2026-01-05 08:41:17 -   Container gluetun  Running
+2026-01-05 08:41:17 -   Container flaresolverr  Running
+2026-01-05 08:41:17 -   Container qbittorrent  Running
+2026-01-05 08:41:17 -   Container prowlarr  Running
+2026-01-05 08:41:17 -   Container gluetun  Waiting
+2026-01-05 08:41:17 -   Container gluetun  Waiting
+2026-01-05 08:41:17 -   Container gluetun  Waiting
+2026-01-05 08:41:18 -   Container gluetun  Healthy
+2026-01-05 08:41:18 -   Container gluetun  Healthy
+2026-01-05 08:41:18 -   Container gluetun  Healthy
+2026-01-05 08:41:18 - Dependent containers restarted
+2026-01-05 08:54:03 - Gluetun unhealthy (count: 1/3)
+2026-01-05 08:55:03 - Gluetun unhealthy (count: 2/3)
+2026-01-05 08:56:03 - Gluetun recovered (was unhealthy for 2 checks)
+2026-01-05 13:09:59 - Gluetun unhealthy (count: 1/3)
+2026-01-05 13:10:59 - Gluetun recovered (was unhealthy for 1 checks)
+2026-01-05 13:54:25 - WARNING: qbittorrent is exited
+2026-01-05 13:54:25 - WARNING: prowlarr is exited
+2026-01-05 13:54:25 - WARNING: flaresolverr is exited
+2026-01-05 13:54:25 - Gluetun unhealthy (count: 1/3)
+2026-01-05 13:55:26 - Gluetun recovered (was unhealthy for 1 checks)
+2026-01-05 14:30:00 - Gluetun unhealthy (count: 1/3)
+2026-01-05 14:31:00 - Gluetun recovered (was unhealthy for 1 checks)
+2026-01-05 14:39:20 - Gluetun unhealthy (count: 1/3)
+2026-01-05 14:44:28 - Gluetun unhealthy (count: 2/3)
+2026-01-05 14:49:36 - Gluetun unhealthy (count: 3/3)
+2026-01-05 14:49:36 - Restarting VPN stack via docker compose...
+2026-01-05 14:50:40 -   unable to get image 'qmcgaw/gluetun': error during connect: Get "http://%2FUsers%2Ftanjiro%2F.orbstack%2Frun%2Fdocker.sock/v1.47/images/qmcgaw/gluetun/json": EOF
+2026-01-05 14:50:40 - Waiting for gluetun to become healthy...
+2026-01-05 15:06:48 - Gluetun is healthy
+2026-01-05 15:06:48 - Restarting dependent services...
+2026-01-05 15:06:48 -   Container gluetun  Running
+2026-01-05 15:06:48 -   Container prowlarr  Recreate
+2026-01-05 15:06:48 -   Container flaresolverr  Recreate
+2026-01-05 15:06:48 -   Container qbittorrent  Recreate
+2026-01-05 15:06:48 -   Container flaresolverr  Recreated
+2026-01-05 15:06:52 -   Container qbittorrent  Recreated
+2026-01-05 15:06:52 -   Container prowlarr  Recreated
+2026-01-05 15:06:52 -   Container gluetun  Waiting
+2026-01-05 15:06:52 -   Container gluetun  Waiting
+2026-01-05 15:06:52 -   Container gluetun  Waiting
+2026-01-05 15:06:52 -   Container gluetun  Healthy
+2026-01-05 15:06:52 -   Container flaresolverr  Starting
+2026-01-05 15:06:52 -   Container gluetun  Healthy
+2026-01-05 15:06:52 -   Container prowlarr  Starting
+2026-01-05 15:06:52 -   Container gluetun  Healthy
+2026-01-05 15:06:52 -   Container qbittorrent  Starting
+2026-01-05 15:06:52 -   Container qbittorrent  Started
+2026-01-05 15:06:52 -   Container flaresolverr  Started
+2026-01-05 15:06:52 -   Container prowlarr  Started
+2026-01-05 15:06:52 - VPN stack restart complete
+2026-01-05 16:03:12 - WARNING: qbittorrent is exited
+2026-01-05 16:03:12 - WARNING: prowlarr is exited
+2026-01-05 16:03:12 - WARNING: flaresolverr is exited
+2026-01-05 16:03:13 - Gluetun unhealthy (count: 1/3)
+2026-01-05 16:04:14 - Gluetun recovered (was unhealthy for 1 checks)
+2026-01-05 17:39:36 - WARNING: prowlarr is exited
+2026-01-05 17:39:36 - WARNING: flaresolverr is exited
+2026-01-05 17:39:36 - Restarting exited dependent containers...
+2026-01-05 17:39:36 -   Container gluetun  Running
+2026-01-05 17:39:36 -   Container flaresolverr  Created
+2026-01-05 17:39:36 -   Container prowlarr  Created
+2026-01-05 17:39:36 -   Container qbittorrent  Running
+2026-01-05 17:39:36 -   Container gluetun  Waiting
+2026-01-05 17:39:36 -   Container gluetun  Waiting
+2026-01-05 17:39:36 -   Container gluetun  Waiting
+2026-01-05 17:39:37 -   Container gluetun  Healthy
+2026-01-05 17:39:37 -   Container gluetun  Healthy
+2026-01-05 17:39:37 -   Container flaresolverr  Starting
+2026-01-05 17:39:37 -   Container gluetun  Healthy
+2026-01-05 17:39:37 -   Container prowlarr  Starting
+2026-01-05 17:39:37 -   Container prowlarr  Started
+2026-01-05 17:39:37 -   Container flaresolverr  Started
+2026-01-05 17:39:37 - Dependent containers restarted
+2026-01-05 18:26:06 - Gluetun unhealthy (count: 1/3)
+2026-01-05 18:27:06 - WARNING: flaresolverr is exited
+2026-01-05 18:27:06 - Restarting exited dependent containers...
+2026-01-05 18:27:06 -   Container gluetun  Running
+2026-01-05 18:27:06 -   Container flaresolverr  Created
+2026-01-05 18:27:06 -   Container qbittorrent  Running
+2026-01-05 18:27:06 -   Container prowlarr  Running
+2026-01-05 18:27:06 -   Container gluetun  Waiting
+2026-01-05 18:27:06 -   Container gluetun  Waiting
+2026-01-05 18:27:06 -   Container gluetun  Waiting
+2026-01-05 18:27:07 -   Container gluetun  Healthy
+2026-01-05 18:27:07 -   Container gluetun  Healthy
+2026-01-05 18:27:07 -   Container flaresolverr  Starting
+2026-01-05 18:27:07 -   Container gluetun  Healthy
+2026-01-05 18:28:09 -   Container flaresolverr  Started
+2026-01-05 18:28:09 - Dependent containers restarted
+2026-01-05 18:28:09 - Gluetun recovered (was unhealthy for 1 checks)
+2026-01-05 18:47:26 - Gluetun unhealthy (count: 1/3)
+2026-01-05 18:52:35 - Gluetun unhealthy (count: 2/3)
+2026-01-05 18:57:43 - Gluetun unhealthy (count: 3/3)
+2026-01-05 18:57:43 - Restarting VPN stack via docker compose...
+2026-01-05 18:58:46 -   unable to get image 'qmcgaw/gluetun': error during connect: Get "http://%2FUsers%2Ftanjiro%2F.orbstack%2Frun%2Fdocker.sock/v1.47/images/qmcgaw/gluetun/json": EOF
+2026-01-05 18:58:46 - Waiting for gluetun to become healthy...
+2026-01-05 19:21:21 - Gluetun is healthy
+2026-01-05 19:21:21 - Restarting dependent services...
+2026-01-05 19:21:21 -   Container gluetun  Running
+2026-01-05 19:21:21 -   Container qbittorrent  Recreate
+2026-01-05 19:21:21 -   Container flaresolverr  Recreate
+2026-01-05 19:21:21 -   Container prowlarr  Recreate
+2026-01-05 19:21:21 -   Container flaresolverr  Recreated
+2026-01-05 19:21:24 -   Container prowlarr  Recreated
+2026-01-05 19:21:27 -   Container qbittorrent  Recreated
+2026-01-05 19:21:27 -   Container gluetun  Waiting
+2026-01-05 19:21:27 -   Container gluetun  Waiting
+2026-01-05 19:21:27 -   Container gluetun  Waiting
+2026-01-05 19:21:27 -   Container gluetun  Healthy
+2026-01-05 19:21:27 -   Container qbittorrent  Starting
+2026-01-05 19:21:27 -   Container gluetun  Healthy
+2026-01-05 19:21:27 -   Container flaresolverr  Starting
+2026-01-05 19:21:27 -   Container gluetun  Healthy
+2026-01-05 19:21:27 -   Container prowlarr  Starting
+2026-01-05 19:21:27 -   Container qbittorrent  Started
+2026-01-05 19:21:27 -   Container flaresolverr  Started
+2026-01-05 19:21:27 -   Container prowlarr  Started
+2026-01-05 19:21:27 - VPN stack restart complete
+2026-01-05 21:59:31 - Gluetun unhealthy (count: 1/3)
+2026-01-05 22:04:39 - Gluetun unhealthy (count: 2/3)
+2026-01-05 22:11:00 - Gluetun unhealthy (count: 3/3)
+2026-01-05 22:11:00 - Restarting VPN stack via docker compose...
+2026-01-05 22:11:00 -   unable to get image 'qmcgaw/gluetun': Cannot connect to the Docker daemon at unix:///Users/tanjiro/.orbstack/run/docker.sock. Is the docker daemon running?
+2026-01-05 22:11:00 - Waiting for gluetun to become healthy...
+2026-01-05 22:11:30 - Gluetun is healthy
+2026-01-05 22:11:30 - Restarting dependent services...
+2026-01-05 22:11:30 -   Container gluetun  Running
+2026-01-05 22:11:30 -   Container flaresolverr  Recreate
+2026-01-05 22:11:30 -   Container qbittorrent  Recreate
+2026-01-05 22:11:30 -   Container prowlarr  Recreate
+2026-01-05 22:11:30 -   Container prowlarr  Recreated
+2026-01-05 22:11:30 -   Container flaresolverr  Recreated
+2026-01-05 22:11:37 -   Container qbittorrent  Recreated
+2026-01-05 22:11:37 -   Container gluetun  Waiting
+2026-01-05 22:11:37 -   Container gluetun  Waiting
+2026-01-05 22:11:37 -   Container gluetun  Waiting
+2026-01-05 22:11:37 -   Container gluetun  Healthy
+2026-01-05 22:11:37 -   Container qbittorrent  Starting
+2026-01-05 22:11:37 -   Container gluetun  Healthy
+2026-01-05 22:11:37 -   Container flaresolverr  Starting
+2026-01-05 22:11:37 -   Container gluetun  Healthy
+2026-01-05 22:11:37 -   Container prowlarr  Starting
+2026-01-05 22:11:37 -   Container flaresolverr  Started
+2026-01-05 22:11:37 -   Container qbittorrent  Started
+2026-01-05 22:11:37 -   Container prowlarr  Started
+2026-01-05 22:11:37 - VPN stack restart complete
+2026-01-05 22:29:44 - Gluetun unhealthy (count: 1/3)
+2026-01-05 22:30:45 - Gluetun recovered (was unhealthy for 1 checks)
