@@ -26,6 +26,148 @@ Cloudflare Edge → Cloudflare Tunnel → cloudflared Container → Traefik → 
   The routing from *.majordoob.com → traefik:80 is configured in the Cloudflare Zero Trust Dashboard (Networks → Tunnels), not locally.
 
 
+## Traefik + cloudflared
+Traefik has been great for managing SSL. One thing I wanted to add was being able to access my homeassistant
+via the same SSL tunnel provided by *Cloudflare Edge*. To do that I had to create a *socat* service on the
+server to redirect traffic to the homeassitant VM. This is because both the container stack and homeassistant VM
+are sharing the same NIC and there was no way to redirect traffic between the two without *socat* as the
+middle man.
+
+
+### Home Assistant Bridge (LaunchAgent)
+
+This setup uses a macOS LaunchAgent to automatically forward traffic from port 8124 to Home Assistant
+(192.168.1.5:8123) using socat.
+
+The reason we need this is because Traefik is running on a container in orbstack. Orbstack runs containers
+in a light weight linux VM which shares the nic with the mac hostmachine. I then have VMWare running
+homeassistant OS with its own IP of 192.168.1.5, but again sharing the exact same nic as orbstack.
+This creates a weird routing problem where the packets between the two cannot be routed. The fix is to
+add a "socat shim" in between to route traffic properly.
+
+#### Why LaunchAgent?
+
+- **Auto-start on login**: Service starts automatically when you log in
+- **Auto-restart**: If socat crashes, launchd will restart it automatically
+- **Network-aware**: Waits for network to be ready before starting
+- **Persistent**: Survives reboots and continues working
+
+#### Setup Instructions
+
+1. **Create the plist file** at `~/Library/LaunchAgents/com.homeassistant.bridge.plist`:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.homeassistant.bridge</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/run/current-system/sw/bin/socat</string>
+        <string>TCP-LISTEN:8124,fork,reuseaddr</string>
+        <string>TCP:192.168.1.5:8123</string>
+    </array>
+
+    <key>KeepAlive</key>
+    <dict>
+        <key>NetworkState</key>
+        <true/>
+    </dict>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>StandardErrorPath</key>
+    <string>/tmp/ha_bridge.err</string>
+    <key>StandardOutPath</key>
+    <string>/tmp/ha_bridge.out</string>
+</dict>
+</plist>
+```
+
+2. **Load the LaunchAgent**:
+
+```bash
+launchctl load ~/Library/LaunchAgents/com.homeassistant.bridge.plist
+```
+
+3. **Grant Network Permissions**:
+   - macOS will prompt you to allow network connections for socat
+   - This is required for the LaunchAgent to work
+   - The prompt may appear in System Settings or as a GUI dialog
+   - **IMPORTANT**: Without granting this permission, socat will fail with "No route to host" errors
+
+   > [!WARN]
+   > READ THE IMPORTANT NOTE ABOVE! THIS TOOK ME HOURS TO DEBUG SINCE I USE THE SERVER VIA CLI
+
+#### Management Commands
+
+```bash
+# Start the service
+launchctl load ~/Library/LaunchAgents/com.homeassistant.bridge.plist
+
+# Stop the service
+launchctl unload ~/Library/LaunchAgents/com.homeassistant.bridge.plist
+
+# Restart the service
+launchctl unload ~/Library/LaunchAgents/com.homeassistant.bridge.plist && \
+launchctl load ~/Library/LaunchAgents/com.homeassistant.bridge.plist
+
+# Check if service is running
+launchctl list | grep com.homeassistant.bridge
+
+# View live logs
+tail -f /tmp/ha_bridge.err
+```
+
+
+#### Architecture
+
+```
+Browser → http://192.168.1.2:8124 (Traefik)
+    ↓
+socat (LaunchAgent)
+    ↓
+Home Assistant → http://192.168.1.5:8123
+```
+
+
+## VPN Gluetun
+Since I do still use T if NZB is missing content we still need to manage our VPN. To do that, I am using
+ProtonVPN with *openVPN*. Using the modern *WireGuard* kept giving me dropped connections while *openVPN*
+has been rock solid.
+
+To route all traffic to my VPN, I am using the AMAZING *gluetun* service. It creates a network stack on
+docker that I can subscribe other services to. For example, to point *prowlarr* to gluetun it is as easy
+as:
+
+```docker-compose.yml
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    network_mode: service:gluetun # Routes through gluetun
+```
+
+
+### Gluetun health check
+Gluetun already has a network killer if the VPN drops. To monitor the health of Gluetun I am
+using a `autoheal`. Contianers marked with
+```bash
+    labels:
+      - "autoheal=true"
+
+```
+Will be monitored and restart when they are in an unhealthy state.
+
+
+> [!Note]
+> `autoheal` uses `docker restart <contianer>` instead of `docker compose restart <container>` meaning that the restart
+> will not respect the *depends on restart condition*. Hopefully this gets added in the future.
+
+
 ## *Arr Stack
 The *Arr services that I am using at the time of writting are:
 
@@ -45,37 +187,61 @@ I have subscripted to NZBGeek and NZBNews for official access to NZB index's. Th
 consistent than using T.
 
 
-## VPN GlueTun
-Since I do still use T if NZB is missing content we still need to manage our VPN. To do that, I am using
-ProtonVPN with *openVPN*. Using the modern *WireGuard* kept giving me dropped connections while *openVPN*
-has been rock solid.
+### Download Hardware
+I was getting some slow performance from the single HDD. To improve performance I added a SSD which handles
+the active downloads and any transcoding done by *tdarr*. This has improve things significantly.
 
-To route all traffic to my VPN, I am using the AMAZING *gluetun* service. It creates a network stack on
-docker that I can subscribe other services to. For example, to point *prowlarr* to gluetun it is as easy
-as:
+```bash
+󰄛 ❯ tree /Volumes/Working-Storage/downloads/ -L 2
+/Volumes/Working-Storage/downloads
+├── incomplete
+├── nzbget
+│   ├── completed
+│   ├── intermediate
+│   ├── nzb
+│   ├── nzbget-2026-01-11.log
+│   ├── nzbget-2026-01-12.log
+│   ├── nzbget-2026-01-13.log
+│   ├── nzbget.log
+│   ├── queue
+│   └── tmp
+├── qbittorrent
+│   ├── completed
+│   ├── incomplete
+│   └── torrents
+└── torrents
+```
 
-```docker-compose.yml
-  prowlarr:
-    image: lscr.io/linuxserver/prowlarr:latest
-    container_name: prowlarr
-    network_mode: service:gluetun # Routes through gluetun
+When the *download client* finishes its download, *radarr* or *sonarr* will move it to the HDD
+
+```bash
+/Volumes/Plex-Storage/media
+├── downloads
+├── movies
+└── shows
 ```
 
 
-### Gluetun health check
-Gluetun already has a network killer if the VPN drops. To monitor the health of Gluetun I am 
-using a launchd service to run my script at `scripts/gluetun-monitor.sh`. 
+When *tdarr* performs its trancoding, it will do it on the SSD as well.
 
-I am using a script beacuse using *autoheal* has proven to be unreliable for gluetun since autoheal 
-restarts the unhealthy container. This makes the containers that depend on it like *prowlarr* to 
-silently die by not having a network connection. They don't throw an unhealthy status 
-so *autoheal* does not restart them. 
+1. tdarr picks up new item in `/Volumes/Plex-Storage/media`
+2. If matches transcode requirements then begins transcode to `/Volumes/Working-Storage/tdarr_cache/`
+3. When finish, replace media on `/Volumes/Plex-Storage/media`
 
 
 
-# TDARR
-After using tdarr for a while I realized that I can use VideoToolBox on MacOS. But that means that I need to set the
-node worker on the host machine and keep the TDARR server on docker.
+### tdarr
+This has been my biggest time pit. *tdarr* is a sick service that can encode sounds and video to different
+formats. I already have *sonarr* and *radarr* only download 4k. Those files are not always in h.265,
+so the first step is transcoding all files **not** in h.265 into h.265 preserving its depth.
+
+> [!note]
+> Research has been done where forcing a 10-bit depth on a 8-bit source results in no increase resolution
+> and just ends up making the file bigger. So, just re-endode with the source depth for best results.
+
+
+The next thing is the audio and subtitles. I am only interested in English and Spanish. Anything else is
+just taking up disk space. The current workflow is as follows:
 
 ```bash
 Input File
@@ -100,28 +266,6 @@ Input File
 
 
 
-
-## Storage Architecture (SSD + HDD)
-
-# Configurations
-
-## JellyFin Access
-
-To access my resources remotely I am using Cloudflare tunnels via the [zero trust dashboard](https://one.dash.cloudflare.com/).
-The setup integrates with the *cloudflared* tunnel. The container establishes a connection with cloudflare
-and routes are added via the zero trust dashboard.
-
-(*.majordoob.com) -> cloudflare.com -> tunnel -> cloudflared -> traefik
-
-
-## Arr Stack
-### Arr Stack Hardware
-All the containers are running via [Orbstack](https://orbstack.dev/) on the M2 Mac Mini. There is two harddrives
-that are utilized, a SSD and a HDD.
-
-The SDD is used for active downloads (*qbittorrent*, *nzbget*) and transcoding cache (*tdarr*)
-
-The HDD is used to store the finalized media (*jellyfin*)
 
 ## Home Assistant Bridge (LaunchAgent)
 
