@@ -5,3 +5,5 @@ logs/
 
 # Tdarr Node - ignore binaries, keep config
 tdarr_node/tdarr_node
+tdarr_node/.staging
+
