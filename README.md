@@ -1,3 +1,31 @@
+# TDARR
+After using tdarr for a while I realized that I can use VideoToolBox on MacOS. But that means that I need to set the
+node worker on the host machine and keep the TDARR server on docker.
+
+```bash
+Input File 
+    → Run Classic: Migz3CleanAudio (eng,spa,und)
+    → Run Classic: Migz4CleanSubs (eng,spa)
+    → Check Video Codec (hevc)
+        → (has hevc) → Begin Command (just remux, no transcode)
+                         → Ensure Audio Stream (en, AAC)
+                         → Ensure Audio Stream (spa, AAC)
+                         → Set Container (mkv)
+                         → Execute
+                         → Replace Original File
+        → (no hevc) → Begin Command (full transcode)
+                         → Set Video Encoder (VideoToolbox)
+                         → Ensure Audio Stream (en, AAC)
+                         → Ensure Audio Stream (spa, AAC)
+                         → 10 Bit Video
+                         → Set Container (mkv)
+                         → Execute
+                         → Replace Original File
+```
+
+
+
+
 ## Storage Architecture (SSD + HDD)
 
 Downloads and transcoding happen on the SSD (`/Volumes/Working-Storage`) to avoid I/O contention with Plex playback from the HDD (`/Volumes/Plex-Storage`).

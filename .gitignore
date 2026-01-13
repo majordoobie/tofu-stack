@@ -2,3 +2,7 @@ CLAUDE.md
 secrets/
 mounts/
 logs/
+
+# Tdarr Node - ignore binaries, keep config
+tdarr_node/*
+!tdarr_node/configs/
