@@ -7,7 +7,7 @@ networks:
     driver: bridge
 services:
   # -----------------------------------------------------------------------------------
-  # Autoheal - Restarts unhealthy containers (gluetun only)
+  # Autoheal - Restarts unhealthy containers
   # -----------------------------------------------------------------------------------
   autoheal:
     image: willfarrell/autoheal
@@ -179,11 +179,13 @@ services:
       - ./tofu-stack-secrets/nzbget.conf:/config/nzbget.conf
       - /Volumes/Working-Storage/downloads:/working # SSD - active downloads
       - /Volumes/Plex-Storage/media/:/data # HDD - final media storage
-    depends_on:
-      gluetun:
-        condition: service_healthy
-        restart: true
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "timeout 5 curl -f http://localhost:6789 || exit 1"]
+      interval: 60s
+      retries: 3
+      start_period: 30s
+      timeout: 10s
     labels:
       - "traefik.enable=true"
       # nzbget - local
@@ -259,9 +261,6 @@ services:
       - 8989:8989
     networks:
       - servarrnetwork
-    depends_on:
-      gluetun:
-        condition: service_healthy
   # -----------------------------------------------------------------------------------
   # Setup sonarr used to manage movies and submit the torrent to qbittoreent
   # -----------------------------------------------------------------------------------
@@ -292,9 +291,6 @@ services:
       - 7878:7878
     networks:
       - servarrnetwork
-    depends_on:
-      gluetun:
-        condition: service_healthy
   # -----------------------------------------------------------------------------------
   # Jellyfin Media Server - runs natively on macOS (not in Docker)
   # Traefik routing configured in traefik-dynamic.yml
