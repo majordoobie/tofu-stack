@@ -1,9 +1,84 @@
+# Tofu Stack
+Tofu Stack is a Arr stack that runs on a M2 Mac Mini with 2 extral drives. A 2TB SSD where active download
+and transcoding take placed. And a 16TB HDD where media is stored.
+
+## Cloudflare Access
+I am using a Cloudflare domain and Cloudflare zero access tools to manage access to my resources. To begin,
+my services can only be access via Cloudlfare edge therefore scanning my home network is impossible as no ports
+are exposed.
+
+```bash
+Cloudflare Edge → Cloudflare Tunnel → cloudflared Container → Traefik → Service (i.e. JellyFin)
+```
+
+
+  1. Cloudflare Edge - External requests to *.majordoob.com hit Cloudflare's edge network (configured in Cloudflare DNS)
+  2. Cloudflare Tunnel - The persistent encrypted tunnel connection maintained by the cloudflared container
+  3. cloudflared Container - Receives tunnel traffic and forwards to Traefik
+  4. Traefik - Routes based on hostname to the appropriate service. Notice all Cloudflare tunnel routes use the web entrypoint (port 80)
+  5. Service - Final destination (Jellyfin, Sonarr, Radarr, etc.)
+
+  Key detail: Traffic uses HTTP (port 80) between cloudflared and Traefik because:
+  - TLS already terminated at Cloudflare Edge
+  - Tunnel itself is encrypted
+  - No need for double encryption inside your local network
+
+  The routing from *.majordoob.com → traefik:80 is configured in the Cloudflare Zero Trust Dashboard (Networks → Tunnels), not locally.
+
+
+## *Arr Stack
+The *Arr services that I am using at the time of writting are:
+
+- Prowlarr -- Manage index's
+- Radarr -- Manage M media
+- Sonarr -- Manage T media
+- JellySeer -- Easy Interface for requesting content
+- JellyFin -- Backend to view data
+
+### JellySeer
+JellySeer is a fork off OverSeer, a friendly web app that makes it easy to view content based on genre and
+other filters. All requests made on it will be forwarded to either *radarr* or *sonarr*. They will handle
+finding the content through *prowlarr's* indexes.
+
+### *Arr Stack
+I have subscripted to NZBGeek and NZBNews for official access to NZB index's. This has been way faster and
+consistent than using T.
+
+
+## VPN GlueTun
+Since I do still use T if NZB is missing content we still need to manage our VPN. To do that, I am using
+ProtonVPN with *openVPN*. Using the modern *WireGuard* kept giving me dropped connections while *openVPN*
+has been rock solid.
+
+To route all traffic to my VPN, I am using the AMAZING *gluetun* service. It creates a network stack on
+docker that I can subscribe other services to. For example, to point *prowlarr* to gluetun it is as easy
+as:
+
+```docker-compose.yml
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    network_mode: service:gluetun # Routes through gluetun
+```
+
+
+### Gluetun health check
+Gluetun already has a network killer if the VPN drops. To monitor the health of Gluetun I am 
+using a launchd service to run my script at `scripts/gluetun-monitor.sh`. 
+
+I am using a script beacuse using *autoheal* has proven to be unreliable for gluetun since autoheal 
+restarts the unhealthy container. This makes the containers that depend on it like *prowlarr* to 
+silently die by not having a network connection. They don't throw an unhealthy status 
+so *autoheal* does not restart them. 
+
+
+
 # TDARR
 After using tdarr for a while I realized that I can use VideoToolBox on MacOS. But that means that I need to set the
 node worker on the host machine and keep the TDARR server on docker.
 
 ```bash
-Input File 
+Input File
     → Run Classic: Migz3CleanAudio (eng,spa,und)
     → Run Classic: Migz4CleanSubs (eng,spa)
     → Check Video Codec (hevc)
@@ -34,7 +109,7 @@ Input File
 
 To access my resources remotely I am using Cloudflare tunnels via the [zero trust dashboard](https://one.dash.cloudflare.com/).
 The setup integrates with the *cloudflared* tunnel. The container establishes a connection with cloudflare
-and routes are added via the zero trust dashboard. 
+and routes are added via the zero trust dashboard.
 
 (*.majordoob.com) -> cloudflare.com -> tunnel -> cloudflared -> traefik
 
@@ -42,7 +117,7 @@ and routes are added via the zero trust dashboard.
 ## Arr Stack
 ### Arr Stack Hardware
 All the containers are running via [Orbstack](https://orbstack.dev/) on the M2 Mac Mini. There is two harddrives
-that are utilized, a SSD and a HDD. 
+that are utilized, a SSD and a HDD.
 
 The SDD is used for active downloads (*qbittorrent*, *nzbget*) and transcoding cache (*tdarr*)
 
