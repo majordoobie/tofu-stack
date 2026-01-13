@@ -98,8 +98,7 @@ services:
       retries: 3
       start_period: 30s
     labels:
-      # Note: gluetun is monitored by scripts/gluetun-monitor.sh (not autoheal)
-      # This allows proper docker compose restart which triggers dependency chain
+      - "autoheal=true"
       - "traefik.enable=true"
       # qBittorrent routing - local (network_mode: service:gluetun)
       - "traefik.http.routers.qbittorrent.rule=Host(`qbittorrent.home.arpa`)"
