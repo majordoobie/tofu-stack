@@ -1,0 +1,307 @@
+{
+  "_id": "6KvsIEMXc",
+  "name": "MacMini",
+  "description": "MacMini - Auto-Correction Flow (Preserve Bit Depth)",
+  "tags": "",
+  "flowPlugins": [
+    {
+      "name": "Input File",
+      "sourceRepo": "Community",
+      "pluginName": "inputFile",
+      "version": "1.0.0",
+      "fpEnabled": true,
+      "id": "zsM_yHd09",
+      "position": {
+        "x": 100,
+        "y": 50
+      }
+    },
+    {
+      "name": "Migz3CleanAudio - eng + spa",
+      "sourceRepo": "Community",
+      "pluginName": "runClassicTranscodePlugin",
+      "version": "2.0.0",
+      "inputsDB": {
+        "pluginSourceId": "Community:Tdarr_Plugin_MC93_Migz3CleanAudio",
+        "language": "eng,spa,und"
+      },
+      "fpEnabled": true,
+      "id": "A-fHkVHjp",
+      "position": {
+        "x": 100,
+        "y": 150
+      }
+    },
+    {
+      "name": "Migz4CleanSubs - eng + spa",
+      "sourceRepo": "Community",
+      "pluginName": "runClassicTranscodePlugin",
+      "version": "2.0.0",
+      "inputsDB": {
+        "pluginSourceId": "Community:Tdarr_Plugin_MC93_Migz4CleanSubs",
+        "language": "eng,spa"
+      },
+      "fpEnabled": true,
+      "id": "w3K3fooAy",
+      "position": {
+        "x": 100,
+        "y": 250
+      }
+    },
+    {
+      "name": "Begin Command",
+      "sourceRepo": "Community",
+      "pluginName": "ffmpegCommandStart",
+      "version": "1.0.0",
+      "fpEnabled": true,
+      "id": "gYw5oMHks",
+      "position": {
+        "x": 100,
+        "y": 350
+      }
+    },
+    {
+      "name": "Add ACC 5.1 384k English Audio",
+      "sourceRepo": "Community",
+      "pluginName": "ffmpegCommandEnsureAudioStream",
+      "version": "1.0.0",
+      "inputsDB": {
+        "enableBitrate": "true",
+        "channels": "6",
+        "bitrate": "384k",
+        "language": "eng"
+      },
+      "fpEnabled": true,
+      "id": "QZIafdgc2",
+      "position": {
+        "x": 100,
+        "y": 450
+      }
+    },
+    {
+      "name": "Add ACC 5.1 384k Spanish Audio",
+      "sourceRepo": "Community",
+      "pluginName": "ffmpegCommandEnsureAudioStream",
+      "version": "1.0.0",
+      "inputsDB": {
+        "enableBitrate": "true",
+        "channels": "6",
+        "bitrate": "384k",
+        "language": "spa"
+      },
+      "fpEnabled": true,
+      "id": "VBfLwzGBi",
+      "position": {
+        "x": 100,
+        "y": 550
+      }
+    },
+    {
+      "name": "Set Container to MKV",
+      "sourceRepo": "Community",
+      "pluginName": "ffmpegCommandSetContainer",
+      "version": "1.0.0",
+      "fpEnabled": true,
+      "id": "IZkTVIwn-",
+      "position": {
+        "x": 100,
+        "y": 650
+      }
+    },
+    {
+      "name": "Check if video is h.265",
+      "sourceRepo": "Community",
+      "pluginName": "checkVideoCodec",
+      "version": "1.0.0",
+      "inputsDB": {
+        "codecs": "hevc,h265"
+      },
+      "fpEnabled": true,
+      "id": "mgJ9boVok",
+      "position": {
+        "x": 100,
+        "y": 750
+      }
+    },
+    {
+      "name": "Check 10 Bit Video",
+      "sourceRepo": "Community",
+      "pluginName": "check10Bit",
+      "version": "1.0.0",
+      "fpEnabled": true,
+      "id": "rPh_b-un0",
+      "position": {
+        "x": 350,
+        "y": 750
+      }
+    },
+    {
+      "name": "Custom VT Args (10-bit)",
+      "sourceRepo": "Community",
+      "pluginName": "ffmpegCommandCustomArguments",
+      "version": "1.0.0",
+      "inputsDB": {
+        "outputArguments": "-c:v hevc_videotoolbox -q:v 65 -pix_fmt p010le -tag:v hvc1"
+      },
+      "fpEnabled": true,
+      "id": "CustomVTArgs_10bit",
+      "position": {
+        "x": 480,
+        "y": 850
+      }
+    },
+    {
+      "name": "Custom VT Args (8-bit)",
+      "sourceRepo": "Community",
+      "pluginName": "ffmpegCommandCustomArguments",
+      "version": "1.0.0",
+      "inputsDB": {
+        "outputArguments": "-c:v hevc_videotoolbox -q:v 65 -tag:v hvc1"
+      },
+      "fpEnabled": true,
+      "id": "CustomVTArgs_8bit",
+      "position": {
+        "x": 220,
+        "y": 850
+      }
+    },
+    {
+      "name": "Execute",
+      "sourceRepo": "Community",
+      "pluginName": "ffmpegCommandExecute",
+      "version": "1.0.0",
+      "fpEnabled": true,
+      "id": "TmwX5ZYzW",
+      "position": {
+        "x": 100,
+        "y": 950
+      }
+    },
+    {
+      "name": "Replace Original File",
+      "sourceRepo": "Community",
+      "pluginName": "replaceOriginalFile",
+      "version": "1.0.0",
+      "fpEnabled": true,
+      "id": "GfIORVXGq",
+      "position": {
+        "x": 100,
+        "y": 1050
+      }
+    }
+  ],
+  "flowEdges": [
+    {
+      "source": "zsM_yHd09",
+      "sourceHandle": "1",
+      "target": "A-fHkVHjp",
+      "targetHandle": null,
+      "id": "input-migz3"
+    },
+    {
+      "source": "A-fHkVHjp",
+      "sourceHandle": "1",
+      "target": "w3K3fooAy",
+      "targetHandle": null,
+      "id": "migz3-1-migz4"
+    },
+    {
+      "source": "A-fHkVHjp",
+      "sourceHandle": "2",
+      "target": "w3K3fooAy",
+      "targetHandle": null,
+      "id": "migz3-2-migz4"
+    },
+    {
+      "source": "w3K3fooAy",
+      "sourceHandle": "1",
+      "target": "gYw5oMHks",
+      "targetHandle": null,
+      "id": "migz4-1-begin"
+    },
+    {
+      "source": "w3K3fooAy",
+      "sourceHandle": "2",
+      "target": "gYw5oMHks",
+      "targetHandle": null,
+      "id": "migz4-2-begin"
+    },
+    {
+      "source": "gYw5oMHks",
+      "sourceHandle": "1",
+      "target": "QZIafdgc2",
+      "targetHandle": null,
+      "id": "begin-eng"
+    },
+    {
+      "source": "QZIafdgc2",
+      "sourceHandle": "1",
+      "target": "VBfLwzGBi",
+      "targetHandle": null,
+      "id": "eng-spa"
+    },
+    {
+      "source": "VBfLwzGBi",
+      "sourceHandle": "1",
+      "target": "IZkTVIwn-",
+      "targetHandle": null,
+      "id": "spa-container"
+    },
+    {
+      "source": "IZkTVIwn-",
+      "sourceHandle": "1",
+      "target": "mgJ9boVok",
+      "targetHandle": null,
+      "id": "container-check"
+    },
+    {
+      "source": "mgJ9boVok",
+      "sourceHandle": "1",
+      "target": "TmwX5ZYzW",
+      "targetHandle": null,
+      "id": "check-yes-execute"
+    },
+    {
+      "source": "mgJ9boVok",
+      "sourceHandle": "2",
+      "target": "rPh_b-un0",
+      "targetHandle": null,
+      "id": "check-no-10bitcheck"
+    },
+    {
+      "source": "rPh_b-un0",
+      "sourceHandle": "1",
+      "target": "CustomVTArgs_10bit",
+      "targetHandle": null,
+      "id": "10bit-yes-custom10"
+    },
+    {
+      "source": "rPh_b-un0",
+      "sourceHandle": "2",
+      "target": "CustomVTArgs_8bit",
+      "targetHandle": null,
+      "id": "10bit-no-custom8"
+    },
+    {
+      "source": "CustomVTArgs_10bit",
+      "sourceHandle": "1",
+      "target": "TmwX5ZYzW",
+      "targetHandle": null,
+      "id": "custom10-execute"
+    },
+    {
+      "source": "CustomVTArgs_8bit",
+      "sourceHandle": "1",
+      "target": "TmwX5ZYzW",
+      "targetHandle": null,
+      "id": "custom8-execute"
+    },
+    {
+      "source": "TmwX5ZYzW",
+      "sourceHandle": "1",
+      "target": "GfIORVXGq",
+      "targetHandle": null,
+      "id": "execute-replace"
+    }
+  ]
+}

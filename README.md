@@ -247,21 +247,20 @@ just taking up disk space. The current workflow is as follows:
 Input File
     → Run Classic: Migz3CleanAudio (eng,spa,und)
     → Run Classic: Migz4CleanSubs (eng,spa)
+    → Begin Command
+         → Ensure Audio Stream (en, AAC 6channel 384k bitrate)
+         → Ensure Audio Stream (spa, AAC6 channel 384k bitrate)
+         → Set Container (mkv)
     → Check Video Codec (hevc)
-        → (has hevc) → Begin Command (just remux, no transcode)
-                         → Ensure Audio Stream (en, AAC)
-                         → Ensure Audio Stream (spa, AAC)
-                         → Set Container (mkv)
-                         → Execute
+        → (has hevc) → Execute (Just remux, preserve original video)
                          → Replace Original File
-        → (no hevc) → Begin Command (full transcode)
-                         → Set Video Encoder (VideoToolbox)
-                         → Ensure Audio Stream (en, AAC)
-                         → Ensure Audio Stream (spa, AAC)
-                         → 10 Bit Video
-                         → Set Container (mkv)
-                         → Execute
-                         → Replace Original File
+        → (no hevc)  → Check 10 Bit Video
+                         → (is 10-bit) → Custom VT Args (-c:v hevc_videotoolbox -q:v 65 -pix_fmt p010le -tag:v hvc1)
+                                            → Execute
+                                            → Replace Original File
+                         → (is 8-bit)  → Custom VT Args (-c:v hevc_videotoolbox -q:v 65 -tag:v hvc1)
+                                            → Execute
+                                            → Replace Original File
 ```
 
 
