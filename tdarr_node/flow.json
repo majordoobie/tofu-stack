@@ -1,7 +1,7 @@
 {
   "_id": "6KvsIEMXc",
   "name": "MacMini",
-  "description": "MacMini - Auto-Correction Flow (Preserve Bit Depth)",
+  "description": "MacMini",
   "tags": "",
   "flowPlugins": [
     {
@@ -17,22 +17,6 @@
       }
     },
     {
-      "name": "Migz3CleanAudio - eng + spa",
-      "sourceRepo": "Community",
-      "pluginName": "runClassicTranscodePlugin",
-      "version": "2.0.0",
-      "inputsDB": {
-        "pluginSourceId": "Community:Tdarr_Plugin_MC93_Migz3CleanAudio",
-        "language": "eng,spa,und"
-      },
-      "fpEnabled": true,
-      "id": "A-fHkVHjp",
-      "position": {
-        "x": 100,
-        "y": 150
-      }
-    },
-    {
       "name": "Migz4CleanSubs - eng + spa",
       "sourceRepo": "Community",
       "pluginName": "runClassicTranscodePlugin",
@@ -45,7 +29,7 @@
       "id": "w3K3fooAy",
       "position": {
         "x": 100,
-        "y": 250
+        "y": 150
       }
     },
     {
@@ -57,7 +41,7 @@
       "id": "gYw5oMHks",
       "position": {
         "x": 100,
-        "y": 350
+        "y": 250
       }
     },
     {
@@ -75,7 +59,7 @@
       "id": "QZIafdgc2",
       "position": {
         "x": 100,
-        "y": 450
+        "y": 350
       }
     },
     {
@@ -91,6 +75,21 @@
       },
       "fpEnabled": true,
       "id": "VBfLwzGBi",
+      "position": {
+        "x": 100,
+        "y": 450
+      }
+    },
+    {
+      "name": "Remove Unwanted Audio Streams",
+      "sourceRepo": "Community",
+      "pluginName": "ffmpegCommandCustomArguments",
+      "version": "1.0.0",
+      "inputsDB": {
+        "outputArguments": "-map 0:v -map 0:a:0 -map 0:a:3 -map 0:s -c copy"
+      },
+      "fpEnabled": true,
+      "id": "remove_unwanted_audio",
       "position": {
         "x": 100,
         "y": 550
@@ -146,8 +145,8 @@
       "fpEnabled": true,
       "id": "CustomVTArgs_10bit",
       "position": {
-        "x": 480,
-        "y": 850
+        "x": 276,
+        "y": 840
       }
     },
     {
@@ -161,8 +160,8 @@
       "fpEnabled": true,
       "id": "CustomVTArgs_8bit",
       "position": {
-        "x": 220,
-        "y": 850
+        "x": 372,
+        "y": 900
       }
     },
     {
@@ -173,8 +172,8 @@
       "fpEnabled": true,
       "id": "TmwX5ZYzW",
       "position": {
-        "x": 100,
-        "y": 950
+        "x": 84,
+        "y": 936
       }
     },
     {
@@ -185,8 +184,8 @@
       "fpEnabled": true,
       "id": "GfIORVXGq",
       "position": {
-        "x": 100,
-        "y": 1050
+        "x": 84,
+        "y": 1044
       }
     }
   ],
@@ -194,23 +193,9 @@
     {
       "source": "zsM_yHd09",
       "sourceHandle": "1",
-      "target": "A-fHkVHjp",
-      "targetHandle": null,
-      "id": "input-migz3"
-    },
-    {
-      "source": "A-fHkVHjp",
-      "sourceHandle": "1",
       "target": "w3K3fooAy",
       "targetHandle": null,
-      "id": "migz3-1-migz4"
-    },
-    {
-      "source": "A-fHkVHjp",
-      "sourceHandle": "2",
-      "target": "w3K3fooAy",
-      "targetHandle": null,
-      "id": "migz3-2-migz4"
+      "id": "input-migz4"
     },
     {
       "source": "w3K3fooAy",
@@ -243,9 +228,16 @@
     {
       "source": "VBfLwzGBi",
       "sourceHandle": "1",
+      "target": "remove_unwanted_audio",
+      "targetHandle": null,
+      "id": "spa-removeaudio"
+    },
+    {
+      "source": "remove_unwanted_audio",
+      "sourceHandle": "1",
       "target": "IZkTVIwn-",
       "targetHandle": null,
-      "id": "spa-container"
+      "id": "removeaudio-container"
     },
     {
       "source": "IZkTVIwn-",
