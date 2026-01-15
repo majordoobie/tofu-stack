@@ -1,12 +1,14 @@
 {
   "nodeName": "nezuko-laptop",
-  "serverIP": "192.168.1.XX",
+  "serverURL": "http://192.168.1.2:8266",
+  "serverIP": "192.168.1.2",
   "serverPort": "8266",
-  "handbrakePath": "",
-  "ffmpegPath": "",
+  "handbrakePath": "/opt/homebrew/bin/HandBrakeCLI",
+  "ffmpegPath": "/run/current-system/sw/bin/ffmpeg",
+  "mkvpropeditPath": "",
   "pathTranslators": [
     {
-      "server": "/media/",
+      "server": "/data_files/",
       "node": "/Volumes/Plex-Storage/media/"
     },
     {
@@ -15,6 +17,12 @@
     }
   ],
   "nodeType": "mapped",
+  "unmappedNodeCache": "/Users/nezuko/code/active_projects/tofu-stack/tdarr_node/tdarr_nezuko/unmappedNodeCache",
   "logLevel": "INFO",
-  "priority": -1
+  "priority": -1,
+  "cronPluginUpdate": "",
+  "apiKey": "",
+  "maxLogSizeMB": 10,
+  "pollInterval": 2000,
+  "startPaused": false
 }

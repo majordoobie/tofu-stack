@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.tofu-stack.tdarr-node.nezuko</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/nezuko/code/active_projects/tofu-stack/tdarr_node/tdarr_nezuko/tdarr_node/Tdarr_Node</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/nezuko/code/active_projects/tofu-stack/tdarr_node/tdarr_nezuko/</string>
+
+    <key>StandardOutPath</key>
+    <string>/Users/nezuko/code/active_projects/tofu-stack/tdarr_node/tdarr_nezuko/logs/tdarr_node.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/nezuko/code/active_projects/tofu-stack/tdarr_node/tdarr_nezuko/tdarr_node_error.log</string>
+
+    <key>RunAtLoad</key>
+    <false/>
+
+    <key>StartOnMount</key>
+    <true/>
+
+    <key>KeepAlive</key>
+    <dict>
+        <key>PathState</key>
+        <dict>
+            <key>/Volumes/Plex-Storage</key>
+            <true/>
+            <key>/Volumes/Working-Storage</key>
+            <true/>
+        </dict>
+    </dict>
+
+    <key>ProcessType</key>
+    <string>Interactive</string>
+</dict>
+</plist>
