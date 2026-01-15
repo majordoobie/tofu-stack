@@ -240,8 +240,14 @@ so the first step is transcoding all files **not** in h.265 into h.265 preservin
 > and just ends up making the file bigger. So, just re-endode with the source depth for best results.
 
 
-The next thing is the audio and subtitles. I am only interested in English and Spanish. Anything else is
-just taking up disk space. The current workflow is as follows:
+The work flow should perform the following:
+- [ ] Remove Subtitles not in Spanish or English
+- [ ] Create English audio in AAC 384k from TrueHD source (Or highest audio available)
+- [ ] Create Spanish audio in AAC 384K from TrueHD source (If Spanish source exists)
+- [ ] Remove all audio except for TrueHD English, EAC3 English, EAC3 Spanish, AAC English, AAC Spanish
+- [ ] If Video is in h.264, encode to h.265 (Maintain color depth)
+
+The flow.json is found in `tdarr_node/flow.json`
 
 ```bash
 Input File

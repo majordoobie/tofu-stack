@@ -5,6 +5,40 @@
   "tags": "",
   "flowPlugins": [
     {
+      "name": "Check if video is h.264",
+      "sourceRepo": "Community",
+      "pluginName": "checkVideoCodec",
+      "version": "1.0.0",
+      "inputsDB": {
+        "codecs": "hevc,h265",
+        "codec": "h264"
+      },
+      "fpEnabled": true,
+      "id": "Pg35SLQ24",
+      "position": {
+        "x": 528,
+        "y": 240
+      }
+    },
+    {
+      "name": "Add AAC 384k Spanish",
+      "sourceRepo": "Community",
+      "pluginName": "ffmpegCommandEnsureAudioStream",
+      "version": "1.0.0",
+      "id": "vxzO_ygp5",
+      "position": {
+        "x": 96,
+        "y": 288
+      },
+      "fpEnabled": true,
+      "inputsDB": {
+        "enableBitrate": "true",
+        "bitrate": "384k",
+        "channels": "6",
+        "language": "spa"
+      }
+    },
+    {
       "name": "Input File",
       "sourceRepo": "Community",
       "pluginName": "inputFile",
@@ -12,99 +46,8 @@
       "fpEnabled": true,
       "id": "zsM_yHd09",
       "position": {
-        "x": 100,
-        "y": 50
-      }
-    },
-    {
-      "name": "Migz4CleanSubs - eng + spa",
-      "sourceRepo": "Community",
-      "pluginName": "runClassicTranscodePlugin",
-      "version": "2.0.0",
-      "inputsDB": {
-        "pluginSourceId": "Community:Tdarr_Plugin_MC93_Migz4CleanSubs",
-        "language": "eng,spa"
-      },
-      "fpEnabled": true,
-      "id": "w3K3fooAy",
-      "position": {
-        "x": 100,
-        "y": 150
-      }
-    },
-    {
-      "name": "Begin Command",
-      "sourceRepo": "Community",
-      "pluginName": "ffmpegCommandStart",
-      "version": "1.0.0",
-      "fpEnabled": true,
-      "id": "gYw5oMHks",
-      "position": {
-        "x": 100,
-        "y": 250
-      }
-    },
-    {
-      "name": "Add ACC 5.1 384k English Audio",
-      "sourceRepo": "Community",
-      "pluginName": "ffmpegCommandEnsureAudioStream",
-      "version": "1.0.0",
-      "inputsDB": {
-        "enableBitrate": "true",
-        "channels": "6",
-        "bitrate": "384k",
-        "language": "eng"
-      },
-      "fpEnabled": true,
-      "id": "QZIafdgc2",
-      "position": {
-        "x": 100,
-        "y": 350
-      }
-    },
-    {
-      "name": "Add ACC 5.1 384k Spanish Audio",
-      "sourceRepo": "Community",
-      "pluginName": "ffmpegCommandEnsureAudioStream",
-      "version": "1.0.0",
-      "inputsDB": {
-        "enableBitrate": "true",
-        "channels": "6",
-        "bitrate": "384k",
-        "language": "spa"
-      },
-      "fpEnabled": true,
-      "id": "VBfLwzGBi",
-      "position": {
-        "x": 100,
-        "y": 450
-      }
-    },
-    {
-      "name": "Remove Unwanted Audio Streams",
-      "sourceRepo": "Community",
-      "pluginName": "ffmpegCommandCustomArguments",
-      "version": "1.0.0",
-      "inputsDB": {
-        "outputArguments": "-map 0:v -map 0:a:0 -map 0:a:3 -map 0:s -c copy"
-      },
-      "fpEnabled": true,
-      "id": "remove_unwanted_audio",
-      "position": {
-        "x": 100,
-        "y": 550
-      }
-    },
-    {
-      "name": "Set Container to MKV",
-      "sourceRepo": "Community",
-      "pluginName": "ffmpegCommandSetContainer",
-      "version": "1.0.0",
-      "fpEnabled": true,
-      "id": "IZkTVIwn-",
-      "position": {
-        "x": 100,
-        "y": 650
+        "x": 96,
+        "y": -444
       }
     },
     {
@@ -118,8 +61,20 @@
       "fpEnabled": true,
       "id": "mgJ9boVok",
       "position": {
-        "x": 100,
-        "y": 750
+        "x": 96,
+        "y": 348
+      }
+    },
+    {
+      "name": "Begin Command",
+      "sourceRepo": "Community",
+      "pluginName": "ffmpegCommandStart",
+      "version": "1.0.0",
+      "fpEnabled": true,
+      "id": "gYw5oMHks",
+      "position": {
+        "x": 96,
+        "y": 168
       }
     },
     {
@@ -130,8 +85,8 @@
       "fpEnabled": true,
       "id": "rPh_b-un0",
       "position": {
-        "x": 350,
-        "y": 750
+        "x": 612,
+        "y": 432
       }
     },
     {
@@ -145,8 +100,8 @@
       "fpEnabled": true,
       "id": "CustomVTArgs_10bit",
       "position": {
-        "x": 276,
-        "y": 840
+        "x": 516,
+        "y": 516
       }
     },
     {
@@ -160,8 +115,8 @@
       "fpEnabled": true,
       "id": "CustomVTArgs_8bit",
       "position": {
-        "x": 372,
-        "y": 900
+        "x": 720,
+        "y": 516
       }
     },
     {
@@ -172,8 +127,8 @@
       "fpEnabled": true,
       "id": "TmwX5ZYzW",
       "position": {
-        "x": 84,
-        "y": 936
+        "x": 252,
+        "y": 708
       }
     },
     {
@@ -184,109 +139,168 @@
       "fpEnabled": true,
       "id": "GfIORVXGq",
       "position": {
-        "x": 84,
-        "y": 1044
+        "x": 252,
+        "y": 792
+      }
+    },
+    {
+      "name": "🔄 DeNiX Stream Ordering: Advanced Stream Layout Optimization",
+      "sourceRepo": "Local",
+      "pluginName": "denix_reorder",
+      "version": "1.0.0",
+      "id": "HNp1djT3R",
+      "position": {
+        "x": 96,
+        "y": -12
+      },
+      "fpEnabled": true,
+      "inputsDB": {
+        "preferredLanguages": "eng,en,spa",
+        "defaultAudioStream": "eng 6",
+        "codecPreference": "eac3,truehd,aac",
+        "ffmpegPath": "/run/current-system/sw/bin/ffmpeg"
+      }
+    },
+    {
+      "name": "📝 DeNiX Subtitle Cleaning: Keep Eng + Spa",
+      "sourceRepo": "Local",
+      "pluginName": "denix_subtitle_cleaner",
+      "version": "2.0.0",
+      "id": "mhEMXHzGM",
+      "position": {
+        "x": 96,
+        "y": -264
+      },
+      "fpEnabled": true,
+      "inputsDB": {
+        "subtitle_languages": "eng,spa",
+        "remove_commentary_subs": "true",
+        "remove_signs_and_songs": "true",
+        "remove_cc_sdh": "true",
+        "tag_unknown_subtitles": "eng",
+        "ffmpegPath": "/run/current-system/sw/bin/ffmpeg"
+      }
+    },
+    {
+      "name": "🔧 DeNiX Enhanced MKV Pre-Process: Remove data streams; Subtitles to SRT; Reorder",
+      "sourceRepo": "Local",
+      "pluginName": "denix_remuxer",
+      "version": "1.0.0",
+      "id": "xQigXkjEL",
+      "position": {
+        "x": 96,
+        "y": -384
+      },
+      "fpEnabled": true,
+      "inputsDB": {
+        "mediainfo_path_linux": "/run/current-system/sw/bin/mediainfo",
+        "remove_data_streams": "true",
+        "remove_image_streams": "true",
+        "remove_chapters": "true",
+        "reorder_streams": "true",
+        "enable_qa_checks": "true",
+        "fix_timestamps": "true",
+        "ffmpeg_path_linux": "/run/current-system/sw/bin/ffmpeg",
+        "logging_level": "debug"
+      }
+    },
+    {
+      "name": "Keep Eng + Spa Audio",
+      "sourceRepo": "Community",
+      "pluginName": "runClassicTranscodePlugin",
+      "version": "2.0.0",
+      "id": "QUxyLTu5i",
+      "position": {
+        "x": 96,
+        "y": -180
+      },
+      "fpEnabled": true,
+      "inputsDB": {
+        "pluginSourceId": "Community:Tdarr_Plugin_MC93_Migz3CleanAudio",
+        "language": "eng,spa,und",
+        "commentary": "true",
+        "tag_language": "eng"
+      }
+    },
+    {
+      "name": "Add AAC 384k English",
+      "sourceRepo": "Community",
+      "pluginName": "ffmpegCommandEnsureAudioStream",
+      "version": "1.0.0",
+      "id": "LM_2iA6zE",
+      "position": {
+        "x": 96,
+        "y": 228
+      },
+      "fpEnabled": true,
+      "inputsDB": {
+        "enableBitrate": "true",
+        "bitrate": "384k",
+        "channels": "6"
+      }
+    },
+    {
+      "name": "Remove all audio codecs except for EAC3, AAC and TrueHD",
+      "sourceRepo": "Community",
+      "pluginName": "runClassicTranscodePlugin",
+      "version": "2.0.0",
+      "id": "wz45xTgod",
+      "position": {
+        "x": 96,
+        "y": -108
+      },
+      "fpEnabled": true,
+      "inputsDB": {
+        "pluginSourceId": "Community:Tdarr_Plugin_jordy_Remove_Audio_By_Codec_Channels",
+        "codecs": "opus,ac3,flac,dts,mp3",
+        "channels": "Any"
+      }
+    },
+    {
+      "name": "h.264 to h.265 worthy?",
+      "sourceRepo": "Community",
+      "pluginName": "checkVideoBitrate",
+      "version": "1.0.0",
+      "id": "8TXyHYY89",
+      "position": {
+        "x": 432,
+        "y": 336
+      },
+      "fpEnabled": true,
+      "inputsDB": {
+        "greaterThan": "0",
+        "lessThan": "8000"
       }
     }
   ],
   "flowEdges": [
     {
-      "source": "zsM_yHd09",
-      "sourceHandle": "1",
-      "target": "w3K3fooAy",
-      "targetHandle": null,
-      "id": "input-migz4"
-    },
-    {
-      "source": "w3K3fooAy",
-      "sourceHandle": "1",
-      "target": "gYw5oMHks",
-      "targetHandle": null,
-      "id": "migz4-1-begin"
-    },
-    {
-      "source": "w3K3fooAy",
-      "sourceHandle": "2",
-      "target": "gYw5oMHks",
-      "targetHandle": null,
-      "id": "migz4-2-begin"
-    },
-    {
-      "source": "gYw5oMHks",
-      "sourceHandle": "1",
-      "target": "QZIafdgc2",
-      "targetHandle": null,
-      "id": "begin-eng"
-    },
-    {
-      "source": "QZIafdgc2",
-      "sourceHandle": "1",
-      "target": "VBfLwzGBi",
-      "targetHandle": null,
-      "id": "eng-spa"
-    },
-    {
-      "source": "VBfLwzGBi",
-      "sourceHandle": "1",
-      "target": "remove_unwanted_audio",
-      "targetHandle": null,
-      "id": "spa-removeaudio"
-    },
-    {
-      "source": "remove_unwanted_audio",
-      "sourceHandle": "1",
-      "target": "IZkTVIwn-",
-      "targetHandle": null,
-      "id": "removeaudio-container"
-    },
-    {
-      "source": "IZkTVIwn-",
-      "sourceHandle": "1",
-      "target": "mgJ9boVok",
-      "targetHandle": null,
-      "id": "container-check"
-    },
-    {
-      "source": "mgJ9boVok",
-      "sourceHandle": "1",
-      "target": "TmwX5ZYzW",
-      "targetHandle": null,
-      "id": "check-yes-execute"
-    },
-    {
-      "source": "mgJ9boVok",
-      "sourceHandle": "2",
-      "target": "rPh_b-un0",
-      "targetHandle": null,
-      "id": "check-no-10bitcheck"
-    },
-    {
       "source": "rPh_b-un0",
       "sourceHandle": "1",
       "target": "CustomVTArgs_10bit",
       "targetHandle": null,
-      "id": "10bit-yes-custom10"
+      "id": "10bit-yes-args"
     },
     {
       "source": "rPh_b-un0",
       "sourceHandle": "2",
       "target": "CustomVTArgs_8bit",
       "targetHandle": null,
-      "id": "10bit-no-custom8"
+      "id": "10bit-no-args"
     },
     {
       "source": "CustomVTArgs_10bit",
       "sourceHandle": "1",
       "target": "TmwX5ZYzW",
       "targetHandle": null,
-      "id": "custom10-execute"
+      "id": "args10-execute"
     },
     {
       "source": "CustomVTArgs_8bit",
       "sourceHandle": "1",
       "target": "TmwX5ZYzW",
       "targetHandle": null,
-      "id": "custom8-execute"
+      "id": "args8-execute"
     },
     {
       "source": "TmwX5ZYzW",
@@ -294,6 +308,146 @@
       "target": "GfIORVXGq",
       "targetHandle": null,
       "id": "execute-replace"
+    },
+    {
+      "source": "mgJ9boVok",
+      "sourceHandle": "1",
+      "target": "TmwX5ZYzW",
+      "targetHandle": null,
+      "id": "kveaefzlW"
+    },
+    {
+      "source": "HNp1djT3R",
+      "sourceHandle": "1",
+      "target": "gYw5oMHks",
+      "targetHandle": null,
+      "id": "hmlFOiEnE"
+    },
+    {
+      "source": "HNp1djT3R",
+      "sourceHandle": "2",
+      "target": "gYw5oMHks",
+      "targetHandle": null,
+      "id": "Nd7KWSObx"
+    },
+    {
+      "source": "mhEMXHzGM",
+      "sourceHandle": "1",
+      "target": "QUxyLTu5i",
+      "targetHandle": null,
+      "id": "adkaXKlmR"
+    },
+    {
+      "source": "mhEMXHzGM",
+      "sourceHandle": "2",
+      "target": "QUxyLTu5i",
+      "targetHandle": null,
+      "id": "7hFlNPKup"
+    },
+    {
+      "source": "gYw5oMHks",
+      "sourceHandle": "1",
+      "target": "LM_2iA6zE",
+      "targetHandle": null,
+      "id": "JDo7rVQq6"
+    },
+    {
+      "source": "LM_2iA6zE",
+      "sourceHandle": "1",
+      "target": "vxzO_ygp5",
+      "targetHandle": null,
+      "id": "MJ8L-WmTX"
+    },
+    {
+      "source": "QUxyLTu5i",
+      "sourceHandle": "1",
+      "target": "wz45xTgod",
+      "targetHandle": null,
+      "id": "Pz0xNc9g5"
+    },
+    {
+      "source": "QUxyLTu5i",
+      "sourceHandle": "2",
+      "target": "wz45xTgod",
+      "targetHandle": null,
+      "id": "MpCvWUgnT"
+    },
+    {
+      "source": "wz45xTgod",
+      "sourceHandle": "1",
+      "target": "HNp1djT3R",
+      "targetHandle": null,
+      "id": "wnZaeclWT"
+    },
+    {
+      "source": "wz45xTgod",
+      "sourceHandle": "2",
+      "target": "HNp1djT3R",
+      "targetHandle": null,
+      "id": "VVjDpSQvR"
+    },
+    {
+      "source": "vxzO_ygp5",
+      "sourceHandle": "1",
+      "target": "mgJ9boVok",
+      "targetHandle": null,
+      "id": "Dhg3CP2MH"
+    },
+    {
+      "source": "mgJ9boVok",
+      "sourceHandle": "2",
+      "target": "Pg35SLQ24",
+      "targetHandle": null,
+      "id": "Tfnuk0ipc"
+    },
+    {
+      "source": "Pg35SLQ24",
+      "sourceHandle": "1",
+      "target": "8TXyHYY89",
+      "targetHandle": null,
+      "id": "SAxJoYM8l"
+    },
+    {
+      "source": "8TXyHYY89",
+      "sourceHandle": "1",
+      "target": "TmwX5ZYzW",
+      "targetHandle": null,
+      "id": "h8pUweEE_"
+    },
+    {
+      "source": "8TXyHYY89",
+      "sourceHandle": "2",
+      "target": "rPh_b-un0",
+      "targetHandle": null,
+      "id": "vGtNeG30o"
+    },
+    {
+      "source": "Pg35SLQ24",
+      "sourceHandle": "2",
+      "target": "rPh_b-un0",
+      "targetHandle": null,
+      "id": "lLHZ__b8P"
+    },
+    {
+      "source": "zsM_yHd09",
+      "sourceHandle": "1",
+      "target": "xQigXkjEL",
+      "targetHandle": null,
+      "id": "kdZrw6phG"
+    },
+    {
+      "source": "xQigXkjEL",
+      "sourceHandle": "1",
+      "target": "mhEMXHzGM",
+      "targetHandle": null,
+      "id": "UV0ivjEyZ"
+    },
+    {
+      "source": "xQigXkjEL",
+      "sourceHandle": "2",
+      "target": "mhEMXHzGM",
+      "targetHandle": null,
+      "id": "E1DkXpklR"
     }
   ]
 }

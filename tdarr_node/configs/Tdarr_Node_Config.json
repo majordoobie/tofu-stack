@@ -3,17 +3,17 @@
   "serverURL": "http://localhost:8266",
   "serverIP": "0.0.0.0",
   "serverPort": "8266",
-  "handbrakePath": "",
-  "ffmpegPath": "",
+  "handbrakePath": "/opt/homebrew/bin/handbrakecli",
+  "ffmpegPath": "/run/current-system/sw/bin/ffmpeg",
   "mkvpropeditPath": "",
   "pathTranslators": [
     {
-      "server": "/media",
-      "node": "/Volumes/Plex-Storage/media"
+      "server": "/media/",
+      "node": "/Volumes/Plex-Storage/media/"
     },
     {
-      "server": "/temp",
-      "node": "/Volumes/Working-Storage/tdarr_cache"
+      "server": "/temp/",
+      "node": "/Volumes/Working-Storage/tdarr_cache/"
     }
   ],
   "nodeType": "mapped",
