@@ -8,7 +8,7 @@
   "mkvpropeditPath": "",
   "pathTranslators": [
     {
-      "server": "/media/",
+      "server": "/data_files/",
       "node": "/Volumes/Plex-Storage/media/"
     },
     {

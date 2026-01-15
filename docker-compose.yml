@@ -336,7 +336,7 @@ services:
       - ./mounts/tdarr/server:/app/server
       - ./mounts/tdarr/configs:/app/configs
       - ./mounts/tdarr/logs:/app/logs
-      - /Volumes/Plex-Storage/media:/media
+      - /Volumes/Plex-Storage/media:/data_files
       - /Volumes/Working-Storage/tdarr_cache:/temp # SSD - transcode cache
     ports:
       - 8265:8265 # Web UI
