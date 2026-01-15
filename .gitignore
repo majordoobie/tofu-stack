@@ -4,6 +4,9 @@ mounts/
 logs/
 
 # Tdarr Node - ignore binaries, keep config
-tdarr_node/tdarr_node
-tdarr_node/.staging
+tdarr_node/tdarr_tanjiro/tdarr_node/
+tdarr_node/tdarr_tanjiro/.staging/
+
+tdarr_node/tdarr_nezuko/tdarr_node/
+tdarr_node/tdarr_nezuko/.staging/
 

@@ -3,21 +3,21 @@
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.tofu-stack.tdarr-node</string>
+    <string>com.tofu-stack.tdarr-node.tanjiro</string>
 
     <key>ProgramArguments</key>
     <array>
-        <string>/Users/tanjiro/containers/tofu-stack/tdarr_node/Tdarr_Node/Tdarr_Node</string>
+        <string>/Users/tanjiro/containers/tofu-stack/tdarr_node/tdarr_tanjiro/tdarr_node/Tdarr_Node</string>
     </array>
 
     <key>WorkingDirectory</key>
-    <string>/Users/tanjiro/containers/tofu-stack/tdarr_node</string>
+    <string>/Users/tanjiro/containers/tofu-stack/tdarr_node/tdarr_tanjiro</string>
 
     <key>StandardOutPath</key>
-    <string>/Users/tanjiro/containers/tofu-stack/tdarr_node/logs/tdarr_node.log</string>
+    <string>/Users/tanjiro/containers/tofu-stack/tdarr_node/tdarr_tanjiro/logs/tdarr_node.log</string>
 
     <key>StandardErrorPath</key>
-    <string>/Users/tanjiro/containers/tofu-stack/tdarr_node/logs/tdarr_node_error.log</string>
+    <string>/Users/tanjiro/containers/tofu-stack/tdarr_node/tdarr_tanjiro/logs/tdarr_node_error.log</string>
 
     <key>RunAtLoad</key>
     <true/>

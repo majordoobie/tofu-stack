@@ -1,0 +1,20 @@
+{
+  "nodeName": "nezuko-laptop",
+  "serverIP": "192.168.1.XX",
+  "serverPort": "8266",
+  "handbrakePath": "",
+  "ffmpegPath": "",
+  "pathTranslators": [
+    {
+      "server": "/media/",
+      "node": "/Volumes/Plex-Storage/media/"
+    },
+    {
+      "server": "/temp/",
+      "node": "/Volumes/Working-Storage/tdarr_cache/"
+    }
+  ],
+  "nodeType": "mapped",
+  "logLevel": "INFO",
+  "priority": -1
+}

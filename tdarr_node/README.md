@@ -1,130 +1,50 @@
-# Running a Tdarr node
+# Running Tdarr Nodes
 
-## Downloading
-Use the python script to download the tdarr_node
+This directory contains configurations for different Tdarr nodes.
 
+- `tdarr_tanjiro/`: Configuration for the node running on this Mac Mini.
+- `tdarr_nezuko/`: Configuration for the node running on the laptop.
+
+## Downloading the Node Binary
+
+Use the shared python script to download and extract the Tdarr Node binary into a specific directory:
+
+### For this server (Tanjiro):
 ```bash
-python3 download-tdarr-node.py
+python3 download-tdarr-node.py tdarr_tanjiro
 ```
 
-That will download the node to `./tdarr_node/`
-
-## Running the Node
-
-The Tdarr_Node binary automatically daemonizes (runs in background) when started. You have two options for managing it:
-
-### Option 1: Manual Start/Stop
-
-**Start the node:**
+### For the laptop (Nezuko):
+Copy the `tdarr_nezuko` folder to your laptop and run:
 ```bash
-cd ~/containers/tofu-stack/tdarr_node
+python3 download-tdarr-node.py tdarr_nezuko
+```
+
+## Running the Node (Tanjiro)
+
+### Option 1: Auto-Start with launchd (Recommended)
+
+1. Copy the plist to your user LaunchAgents:
+```bash
+cp tdarr_node/tdarr_tanjiro/com.tofu-stack.tdarr-node.tanjiro.plist ~/Library/LaunchAgents/
+```
+
+2. Load and start the service:
+```bash
+launchctl load ~/Library/LaunchAgents/com.tofu-stack.tdarr-node.tanjiro.plist
+```
+
+### Option 2: Manual Start
+
+```bash
+cd tdarr_node/tdarr_tanjiro
 ./tdarr_node/Tdarr_Node
-```
-
-**Check if running:**
-```bash
-ps aux | grep "[T]darr_Node"
-```
-
-**Stop the node:**
-```bash
-pkill -f "Tdarr_Node"
-```
-
-**View logs:**
-```bash
-tail -f ~/containers/tofu-stack/tdarr_node/logs/Tdarr_Node_Log.txt
-```
-
-**Note:** Ctrl+C will NOT stop the node because it detaches from the terminal. You must use `pkill` to stop it.
-
-### Option 2: Auto-Start with launchd (Recommended)
-
-For automatic startup at login and auto-restart on crashes, use the launchd service.
-
-**Install the service:**
-```bash
-# Copy plist to LaunchAgents directory
-cp ~/containers/tofu-stack/tdarr_node/com.tofu-stack.tdarr-node.plist ~/Library/LaunchAgents/
-
-# Load and start the service
-launchctl load ~/Library/LaunchAgents/com.tofu-stack.tdarr-node.plist
-```
-
-**Check service status:**
-```bash
-launchctl list | grep tdarr
-```
-
-**Stop the service:**
-```bash
-launchctl unload ~/Library/LaunchAgents/com.tofu-stack.tdarr-node.plist
-```
-
-**Restart the service:**
-```bash
-launchctl unload ~/Library/LaunchAgents/com.tofu-stack.tdarr-node.plist
-launchctl load ~/Library/LaunchAgents/com.tofu-stack.tdarr-node.plist
-```
-
-**View logs:**
-```bash
-# Tdarr's own logs
-tail -f ~/containers/tofu-stack/tdarr_node/logs/Tdarr_Node_Log.txt
-
-# launchd stdout/stderr
-tail -f ~/containers/tofu-stack/tdarr_node/logs/tdarr_node.log
-tail -f ~/containers/tofu-stack/tdarr_node/logs/tdarr_node_error.log
-```
-
-**Uninstall the service:**
-```bash
-launchctl unload ~/Library/LaunchAgents/com.tofu-stack.tdarr-node.plist
-rm ~/Library/LaunchAgents/com.tofu-stack.tdarr-node.plist
 ```
 
 ## Configuration
 
-The node configuration is in `./configs/Tdarr_Node_Config.json`. Key settings:
+Each node has its own config in `configs/Tdarr_Node_Config.json` within its respective directory.
 
-- **nodeName**: Identifies this node in the Tdarr server UI
-- **serverURL**: Points to the Tdarr server (Docker container on port 8266)
-- **pathTranslators**: Maps Docker container paths to native macOS paths
-  - `/media` → `/Volumes/Plex-Storage/media` (media library)
-  - `/temp` → `/Volumes/Working-Storage/tdarr_cache` (transcode cache on SSD)
-
-## VideoToolbox Hardware Encoding
-
-This node runs natively on macOS to access VideoToolbox for hardware-accelerated H.265/HEVC encoding.
-
-**Verify VideoToolbox is working:**
-```bash
-# Start the node and check logs
-tail -f ~/containers/tofu-stack/tdarr_node/logs/Tdarr_Node_Log.txt | grep -i videotoolbox
-```
-
-You should see:
-```
-h264_videotoolbox-true-true,hevc_videotoolbox-true-true
-```
-
-## Troubleshooting
-
-**Multiple nodes showing in Tdarr UI:**
-- You likely started the node multiple times. Kill all instances and restart:
-  ```bash
-  pkill -f "Tdarr_Node"
-  sleep 5
-  ./tdarr_node/Tdarr_Node
-  ```
-
-**FFprobe errors:**
-- Make sure ffprobe is executable:
-  ```bash
-  chmod +x ./tdarr_node/assets/app/ffmpeg/darwin_arm64/ffprobe
-  ```
-
-**Node not connecting to server:**
-- Verify server is running: `docker compose ps tdarr`
-- Check serverURL in config: `cat ./configs/Tdarr_Node_Config.json | grep serverURL`
-- Check logs: `tail -50 ./logs/Tdarr_Node_Log.txt`
+Key settings for network nodes (Laptop):
+- **serverIP**: Should be set to the Mac Mini's local IP (e.g., `192.168.1.XX`).
+- **pathTranslators**: Ensure these match the SMB mount points on your laptop.
