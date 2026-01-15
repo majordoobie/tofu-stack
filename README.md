@@ -174,11 +174,11 @@ The *Arr services that I am using at the time of writting are:
 - Prowlarr -- Manage index's
 - Radarr -- Manage M media
 - Sonarr -- Manage T media
-- JellySeer -- Easy Interface for requesting content
-- JellyFin -- Backend to view data
+- Overseerr -- Easy interface for requesting content
+- Plex -- Backend to view data
 
-### JellySeer
-JellySeer is a fork off OverSeer, a friendly web app that makes it easy to view content based on genre and
+### Overseerr
+Overseerr is a friendly web app that makes it easy to view content based on genre and
 other filters. All requests made on it will be forwarded to either *radarr* or *sonarr*. They will handle
 finding the content through *prowlarr's* indexes.
 
