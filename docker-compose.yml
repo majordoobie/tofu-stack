@@ -73,8 +73,7 @@ services:
       - 8000:8000 # gluetun built in web api
       - 8080:8080 # qbittorrent web interface
       - 6881:6881 # qbittorrent torrent port
-      - 9696:9696 # prowlarr
-      - 8191:8191 # flaresolverr
+      - 8118:8888 # HTTP proxy for prowlarr indexers (privoxy standard port)
     volumes:
       - ./mounts/gluetun:/gluetun
       - ./tofu-stack-secrets/gluten_auth_config.toml:/gluetun/auth/config.toml:ro
@@ -84,6 +83,8 @@ services:
       SERVER_COUNTRIES: United States
       OPENVPN_USER_SECRETFILE: /run/secrets/openvpn_user
       OPENVPN_PASSWORD_SECRETFILE: /run/secrets/openvpn_pass
+      HTTPPROXY: on
+      HTTPPROXY_LISTENING_ADDRESS: :8888
     secrets:
       - openvpn_user
       - openvpn_pass
@@ -114,20 +115,6 @@ services:
       - "traefik.http.routers.qbittorrent-cf.rule=Host(`qbittorrent.majordoob.com`)"
       - "traefik.http.routers.qbittorrent-cf.entrypoints=web"
       - "traefik.http.routers.qbittorrent-cf.service=qbittorrent"
-      # Prowlarr routing - local (network_mode: service:gluetun)
-      - "traefik.http.routers.prowlarr.rule=Host(`prowlarr.home.arpa`)"
-      - "traefik.http.routers.prowlarr.entrypoints=websecure"
-      - "traefik.http.routers.prowlarr.tls=true"
-      - "traefik.http.routers.prowlarr.service=prowlarr"
-      - "traefik.http.services.prowlarr.loadbalancer.server.port=9696"
-      - "traefik.http.routers.prowlarr-http.rule=Host(`prowlarr.home.arpa`)"
-      - "traefik.http.routers.prowlarr-http.entrypoints=web"
-      - "traefik.http.routers.prowlarr-http.middlewares=redirect-to-https"
-      - "traefik.http.routers.prowlarr-http.service=prowlarr"
-      # Prowlarr routing - Cloudflare tunnel
-      - "traefik.http.routers.prowlarr-cf.rule=Host(`prowlarr.majordoob.com`)"
-      - "traefik.http.routers.prowlarr-cf.entrypoints=web"
-      - "traefik.http.routers.prowlarr-cf.service=prowlarr"
     restart: unless-stopped
   # -----------------------------------------------------------------------------------
   ## qbittorrent is a torrent downloader. It is currently set to use the network stack
@@ -204,11 +191,10 @@ services:
     volumes:
       - ./mounts/prowlarr:/config
     restart: unless-stopped
-    depends_on:
-      gluetun:
-        condition: service_healthy
-        restart: true
-    network_mode: service:gluetun # Routes through gluetun (Traefik labels are on gluetun service)
+    ports:
+      - 9696:9696
+    networks:
+      - servarrnetwork
     healthcheck:
       test: ["CMD", "ping", "-c", "1", "8.8.8.8"]
       interval: 60s
@@ -217,6 +203,21 @@ services:
       timeout: 10s
     labels:
       - "autoheal=true"
+      - "traefik.enable=true"
+      # Prowlarr routing - local
+      - "traefik.http.routers.prowlarr.rule=Host(`prowlarr.home.arpa`)"
+      - "traefik.http.routers.prowlarr.entrypoints=websecure"
+      - "traefik.http.routers.prowlarr.tls=true"
+      - "traefik.http.routers.prowlarr.service=prowlarr"
+      - "traefik.http.services.prowlarr.loadbalancer.server.port=9696"
+      - "traefik.http.routers.prowlarr-http.rule=Host(`prowlarr.home.arpa`)"
+      - "traefik.http.routers.prowlarr-http.entrypoints=web"
+      - "traefik.http.routers.prowlarr-http.middlewares=redirect-to-https"
+      - "traefik.http.routers.prowlarr-http.service=prowlarr"
+      # Prowlarr routing - Cloudflare tunnel
+      - "traefik.http.routers.prowlarr-cf.rule=Host(`prowlarr.majordoob.com`)"
+      - "traefik.http.routers.prowlarr-cf.entrypoints=web"
+      - "traefik.http.routers.prowlarr-cf.service=prowlarr"
   # -----------------------------------------------------------------------------------
   # Setup sonarr used to manage TV shows and submit the torrent to qbittoreent
   # -----------------------------------------------------------------------------------
@@ -339,28 +340,6 @@ services:
   #     - "traefik.http.routers.tdarr-http.rule=Host(`tdarr.home.arpa`)"
   #     - "traefik.http.routers.tdarr-http.entrypoints=web"
   #     - "traefik.http.routers.tdarr-http.middlewares=redirect-to-https"
-  # -----------------------------------------------------------------------------------
-  # FlareSolverr - Bypasses Cloudflare protection for indexers
-  # -----------------------------------------------------------------------------------
-  flaresolverr:
-    image: ghcr.io/flaresolverr/flaresolverr:latest
-    container_name: flaresolverr
-    environment:
-      !!merge <<: *common-env
-    network_mode: service:gluetun
-    depends_on:
-      gluetun:
-        condition: service_healthy
-        restart: true
-    healthcheck:
-      test: ["CMD-SHELL", "timeout 5 curl -f http://localhost:8191 || exit 1"]
-      interval: 60s
-      retries: 3
-      start_period: 20s
-      timeout: 10s
-    labels:
-      - "autoheal=true"
-    restart: unless-stopped
   # -----------------------------------------------------------------------------------
   # Tautulli - Plex monitoring and statistics
   # -----------------------------------------------------------------------------------
