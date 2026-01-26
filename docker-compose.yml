@@ -408,6 +408,38 @@ services:
       - "traefik.http.routers.homepage-cf.entrypoints=web"
       - "traefik.http.routers.homepage-cf.service=homepage"
       - "traefik.http.services.homepage.loadbalancer.server.port=3000"
+  # -----------------------------------------------------------------------------------
+  # Ofelia - Docker Job Scheduler (runs Recyclarr sync daily)
+  # -----------------------------------------------------------------------------------
+  ofelia:
+    image: mcuadros/ofelia:latest
+    container_name: ofelia
+    restart: unless-stopped
+    depends_on:
+      - recyclarr
+    command: daemon --docker
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    labels:
+      - "ofelia.enabled=true"
+  # -----------------------------------------------------------------------------------
+  # Recyclarr - Syncs TRaSH Guides to Radarr/Sonarr
+  # -----------------------------------------------------------------------------------
+  recyclarr:
+    image: ghcr.io/recyclarr/recyclarr:latest
+    container_name: recyclarr
+    restart: unless-stopped
+    user: 501:20
+    environment:
+      TZ: America/New_York
+    volumes:
+      - ./mounts/recyclarr:/config
+    networks:
+      - servarrnetwork
+    labels:
+      - "ofelia.enabled=true"
+      - "ofelia.job-exec.recyclarr-sync.schedule=0 0 3 * * *"
+      - "ofelia.job-exec.recyclarr-sync.command=recyclarr sync"
 secrets:
   openvpn_user:
     file: tofu-stack-secrets/openvpn_user.txt
