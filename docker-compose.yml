@@ -165,7 +165,7 @@ services:
   sabnzbd:
     image: lscr.io/linuxserver/sabnzbd:latest
     container_name: sabnzbd
-    cpus: 3
+    cpus: 5
     environment:
       !!merge <<: *common-env
     volumes:
@@ -192,53 +192,6 @@ services:
       - 8085:8080
     networks:
       - servarrnetwork
-  # -----------------------------------------------------------------------------------
-  # NZBGet - DISABLED (SSL connection issues with Newshosting)
-  # Kept here for reference, can be re-enabled if needed
-  # -----------------------------------------------------------------------------------
-  # nzbget:
-  #   image: lscr.io/linuxserver/nzbget:latest
-  #   container_name: nzbget
-  #   cpus: 3
-  #   environment:
-  #     FILE__NZBGET_USER: /run/secrets/nzbget_user
-  #     FILE__NZBGET_PASS: /run/secrets/nzbget_pass
-  #     !!merge <<: *common-env
-  #   secrets:
-  #     - nzbget_user
-  #     - nzbget_pass
-  #   volumes:
-  #     - ./mounts/nzbget/appdata:/config
-  #     - ./tofu-stack-secrets/nzbget.conf:/config/nzbget.conf
-  #     - /Volumes/Working-Storage/downloads:/working # SSD - active downloads
-  #     - /Volumes/Plex-Storage/media/:/data # HDD - final media storage
-  #   restart: unless-stopped
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "timeout 5 curl -f http://localhost:6789 || exit 1"]
-  #     interval: 60s
-  #     retries: 3
-  #     start_period: 30s
-  #     timeout: 10s
-  #   labels:
-  #     - "traefik.enable=true"
-  #     # nzbget - local
-  #     - "traefik.http.routers.nzbget.rule=Host(`nzbget.home.arpa`)"
-  #     - "traefik.http.routers.nzbget.entrypoints=websecure"
-  #     - "traefik.http.routers.nzbget.tls=true"
-  #     - "traefik.http.services.nzbget.loadbalancer.server.port=6789"
-  #     - "traefik.http.routers.nzbget-http.rule=Host(`nzbget.home.arpa`)"
-  #     - "traefik.http.routers.nzbget-http.entrypoints=web"
-  #     # nzbget - Cloudflare tunnel
-  #     - "traefik.http.routers.nzbget-cf.rule=Host(`nzbget.majordoob.com`)"
-  #     - "traefik.http.routers.nzbget-cf.entrypoints=web"
-  #     - "traefik.http.routers.nzbget-cf.service=nzbget"
-  #   ports:
-  #     - 6789:6789
-  #   networks:
-  #     - servarrnetwork
-  # -----------------------------------------------------------------------------------
-  ## the next thing to set up are the *arr apps
-  #
   # -----------------------------------------------------------------------------------
   ## Set up the torrent indexer. This will index where to find the torrents.
   ## Tools like Raddarr will then pass matches from prowlarr to qbittorrent
@@ -351,41 +304,41 @@ services:
   # -----------------------------------------------------------------------------------
   # Tdarr - Automated media transcoding (adds AAC audio tracks for HomePod compatibility)
   # -----------------------------------------------------------------------------------
-  tdarr:
-    image: ghcr.io/haveagitgat/tdarr:latest
-    container_name: tdarr
-    cpus: 2
-    restart: unless-stopped
-    environment:
-      !!merge <<: *common-env
-      serverIP: 0.0.0.0
-      serverPort: 8266
-      webUIPort: 8265
-      internalNode: "false"
-      inContainer: "true"
-      ffmpegVersion: 7
-      nodeName: InternalNode
-    volumes:
-      - ./mounts/tdarr/server:/app/server
-      - ./mounts/tdarr/configs:/app/configs
-      - ./mounts/tdarr/logs:/app/logs
-      - /Volumes/Plex-Storage/media:/data_files
-      - /Volumes/Working-Storage/tdarr_cache:/temp # SSD - transcode cache
-    ports:
-      - 8265:8265 # Web UI
-      - 8266:8266 # Server port
-    networks:
-      - servarrnetwork
-    labels:
-      - "traefik.enable=true"
-      # tdarr - local
-      - "traefik.http.routers.tdarr.rule=Host(`tdarr.home.arpa`)"
-      - "traefik.http.routers.tdarr.entrypoints=websecure"
-      - "traefik.http.routers.tdarr.tls=true"
-      - "traefik.http.services.tdarr.loadbalancer.server.port=8265"
-      - "traefik.http.routers.tdarr-http.rule=Host(`tdarr.home.arpa`)"
-      - "traefik.http.routers.tdarr-http.entrypoints=web"
-      - "traefik.http.routers.tdarr-http.middlewares=redirect-to-https"
+  # tdarr:
+  #   image: ghcr.io/haveagitgat/tdarr:latest
+  #   container_name: tdarr
+  #   cpus: 2
+  #   restart: unless-stopped
+  #   environment:
+  #     !!merge <<: *common-env
+  #     serverIP: 0.0.0.0
+  #     serverPort: 8266
+  #     webUIPort: 8265
+  #     internalNode: "false"
+  #     inContainer: "true"
+  #     ffmpegVersion: 7
+  #     nodeName: InternalNode
+  #   volumes:
+  #     - ./mounts/tdarr/server:/app/server
+  #     - ./mounts/tdarr/configs:/app/configs
+  #     - ./mounts/tdarr/logs:/app/logs
+  #     - /Volumes/Plex-Storage/media:/data_files
+  #     - /Volumes/Working-Storage/tdarr_cache:/temp # SSD - transcode cache
+  #   ports:
+  #     - 8265:8265 # Web UI
+  #     - 8266:8266 # Server port
+  #   networks:
+  #     - servarrnetwork
+  #   labels:
+  #     - "traefik.enable=true"
+  #     # tdarr - local
+  #     - "traefik.http.routers.tdarr.rule=Host(`tdarr.home.arpa`)"
+  #     - "traefik.http.routers.tdarr.entrypoints=websecure"
+  #     - "traefik.http.routers.tdarr.tls=true"
+  #     - "traefik.http.services.tdarr.loadbalancer.server.port=8265"
+  #     - "traefik.http.routers.tdarr-http.rule=Host(`tdarr.home.arpa`)"
+  #     - "traefik.http.routers.tdarr-http.entrypoints=web"
+  #     - "traefik.http.routers.tdarr-http.middlewares=redirect-to-https"
   # -----------------------------------------------------------------------------------
   # FlareSolverr - Bypasses Cloudflare protection for indexers
   # -----------------------------------------------------------------------------------
