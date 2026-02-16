@@ -270,6 +270,28 @@ Input File
 ```
 
 
+### Managing TDARR node
+```bash
+  # Check status:
+  launchctl print gui/$(id -u)/com.tofu-stack.tdarr-node.tanjiro
+
+  # Reload the service (if you made changes to the plist):
+  # Unload first
+  launchctl bootout gui/$(id -u)/com.tofu-stack.tdarr-node.tanjiro
+
+  # Then load again
+  launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.tofu-stack.tdarr-node.tanjiro.plist
+
+  # Stop the service:
+  launchctl bootout gui/$(id -u)/com.tofu-stack.tdarr-node.tanjiro
+
+  # Start the service:
+  launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.tofu-stack.tdarr-node.tanjiro.plist
+
+
+```
+
+
 
 
 ## Home Assistant Bridge (LaunchAgent)

@@ -5,40 +5,6 @@
   "tags": "",
   "flowPlugins": [
     {
-      "name": "Check if video is h.264",
-      "sourceRepo": "Community",
-      "pluginName": "checkVideoCodec",
-      "version": "1.0.0",
-      "inputsDB": {
-        "codecs": "hevc,h265",
-        "codec": "h264"
-      },
-      "fpEnabled": true,
-      "id": "Pg35SLQ24",
-      "position": {
-        "x": 528,
-        "y": 240
-      }
-    },
-    {
-      "name": "Add AAC 384k Spanish",
-      "sourceRepo": "Community",
-      "pluginName": "ffmpegCommandEnsureAudioStream",
-      "version": "1.0.0",
-      "id": "vxzO_ygp5",
-      "position": {
-        "x": 96,
-        "y": 288
-      },
-      "fpEnabled": true,
-      "inputsDB": {
-        "enableBitrate": "true",
-        "bitrate": "384k",
-        "channels": "6",
-        "language": "spa"
-      }
-    },
-    {
       "name": "Input File",
       "sourceRepo": "Community",
       "pluginName": "inputFile",
@@ -51,87 +17,6 @@
       }
     },
     {
-      "name": "Check if video is h.265",
-      "sourceRepo": "Community",
-      "pluginName": "checkVideoCodec",
-      "version": "1.0.0",
-      "inputsDB": {
-        "codecs": "hevc,h265"
-      },
-      "fpEnabled": true,
-      "id": "mgJ9boVok",
-      "position": {
-        "x": 96,
-        "y": 348
-      }
-    },
-    {
-      "name": "Begin Command",
-      "sourceRepo": "Community",
-      "pluginName": "ffmpegCommandStart",
-      "version": "1.0.0",
-      "fpEnabled": true,
-      "id": "gYw5oMHks",
-      "position": {
-        "x": 96,
-        "y": 168
-      }
-    },
-    {
-      "name": "Check 10 Bit Video",
-      "sourceRepo": "Community",
-      "pluginName": "check10Bit",
-      "version": "1.0.0",
-      "fpEnabled": true,
-      "id": "rPh_b-un0",
-      "position": {
-        "x": 612,
-        "y": 432
-      }
-    },
-    {
-      "name": "Custom VT Args (10-bit)",
-      "sourceRepo": "Community",
-      "pluginName": "ffmpegCommandCustomArguments",
-      "version": "1.0.0",
-      "inputsDB": {
-        "outputArguments": "-c:v hevc_videotoolbox -q:v 65 -pix_fmt p010le -tag:v hvc1"
-      },
-      "fpEnabled": true,
-      "id": "CustomVTArgs_10bit",
-      "position": {
-        "x": 516,
-        "y": 516
-      }
-    },
-    {
-      "name": "Custom VT Args (8-bit)",
-      "sourceRepo": "Community",
-      "pluginName": "ffmpegCommandCustomArguments",
-      "version": "1.0.0",
-      "inputsDB": {
-        "outputArguments": "-c:v hevc_videotoolbox -q:v 65 -tag:v hvc1"
-      },
-      "fpEnabled": true,
-      "id": "CustomVTArgs_8bit",
-      "position": {
-        "x": 720,
-        "y": 516
-      }
-    },
-    {
-      "name": "Execute",
-      "sourceRepo": "Community",
-      "pluginName": "ffmpegCommandExecute",
-      "version": "1.0.0",
-      "fpEnabled": true,
-      "id": "TmwX5ZYzW",
-      "position": {
-        "x": 252,
-        "y": 708
-      }
-    },
-    {
       "name": "Replace Original File",
       "sourceRepo": "Community",
       "pluginName": "replaceOriginalFile",
@@ -139,8 +24,8 @@
       "fpEnabled": true,
       "id": "GfIORVXGq",
       "position": {
-        "x": 252,
-        "y": 792
+        "x": 96,
+        "y": 72
       }
     },
     {
@@ -151,12 +36,12 @@
       "id": "HNp1djT3R",
       "position": {
         "x": 96,
-        "y": -12
+        "y": -72
       },
       "fpEnabled": true,
       "inputsDB": {
         "preferredLanguages": "eng,en,spa",
-        "defaultAudioStream": "eng 6",
+        "defaultAudioStream": "eng 6,eng 2,spa 6,spa 2",
         "codecPreference": "eac3,truehd,aac",
         "ffmpegPath": "/run/current-system/sw/bin/ffmpeg"
       }
@@ -197,11 +82,11 @@
         "remove_data_streams": "true",
         "remove_image_streams": "true",
         "remove_chapters": "true",
-        "reorder_streams": "true",
+        "reorder_streams": "false",
         "enable_qa_checks": "true",
         "fix_timestamps": "true",
         "ffmpeg_path_linux": "/run/current-system/sw/bin/ffmpeg",
-        "logging_level": "debug"
+        "logging_level": "info"
       }
     },
     {
@@ -221,115 +106,9 @@
         "commentary": "true",
         "tag_language": "eng"
       }
-    },
-    {
-      "name": "Add AAC 384k English",
-      "sourceRepo": "Community",
-      "pluginName": "ffmpegCommandEnsureAudioStream",
-      "version": "1.0.0",
-      "id": "LM_2iA6zE",
-      "position": {
-        "x": 96,
-        "y": 228
-      },
-      "fpEnabled": true,
-      "inputsDB": {
-        "enableBitrate": "true",
-        "bitrate": "384k",
-        "channels": "6"
-      }
-    },
-    {
-      "name": "Remove all audio codecs except for EAC3, AAC and TrueHD",
-      "sourceRepo": "Community",
-      "pluginName": "runClassicTranscodePlugin",
-      "version": "2.0.0",
-      "id": "wz45xTgod",
-      "position": {
-        "x": 96,
-        "y": -108
-      },
-      "fpEnabled": true,
-      "inputsDB": {
-        "pluginSourceId": "Community:Tdarr_Plugin_jordy_Remove_Audio_By_Codec_Channels",
-        "codecs": "opus,ac3,flac,dts,mp3",
-        "channels": "Any"
-      }
-    },
-    {
-      "name": "h.264 to h.265 worthy?",
-      "sourceRepo": "Community",
-      "pluginName": "checkVideoBitrate",
-      "version": "1.0.0",
-      "id": "8TXyHYY89",
-      "position": {
-        "x": 432,
-        "y": 336
-      },
-      "fpEnabled": true,
-      "inputsDB": {
-        "greaterThan": "0",
-        "lessThan": "8000"
-      }
     }
   ],
   "flowEdges": [
-    {
-      "source": "rPh_b-un0",
-      "sourceHandle": "1",
-      "target": "CustomVTArgs_10bit",
-      "targetHandle": null,
-      "id": "10bit-yes-args"
-    },
-    {
-      "source": "rPh_b-un0",
-      "sourceHandle": "2",
-      "target": "CustomVTArgs_8bit",
-      "targetHandle": null,
-      "id": "10bit-no-args"
-    },
-    {
-      "source": "CustomVTArgs_10bit",
-      "sourceHandle": "1",
-      "target": "TmwX5ZYzW",
-      "targetHandle": null,
-      "id": "args10-execute"
-    },
-    {
-      "source": "CustomVTArgs_8bit",
-      "sourceHandle": "1",
-      "target": "TmwX5ZYzW",
-      "targetHandle": null,
-      "id": "args8-execute"
-    },
-    {
-      "source": "TmwX5ZYzW",
-      "sourceHandle": "1",
-      "target": "GfIORVXGq",
-      "targetHandle": null,
-      "id": "execute-replace"
-    },
-    {
-      "source": "mgJ9boVok",
-      "sourceHandle": "1",
-      "target": "TmwX5ZYzW",
-      "targetHandle": null,
-      "id": "kveaefzlW"
-    },
-    {
-      "source": "HNp1djT3R",
-      "sourceHandle": "1",
-      "target": "gYw5oMHks",
-      "targetHandle": null,
-      "id": "hmlFOiEnE"
-    },
-    {
-      "source": "HNp1djT3R",
-      "sourceHandle": "2",
-      "target": "gYw5oMHks",
-      "targetHandle": null,
-      "id": "Nd7KWSObx"
-    },
     {
       "source": "mhEMXHzGM",
       "sourceHandle": "1",
@@ -343,90 +122,6 @@
       "target": "QUxyLTu5i",
       "targetHandle": null,
       "id": "7hFlNPKup"
-    },
-    {
-      "source": "gYw5oMHks",
-      "sourceHandle": "1",
-      "target": "LM_2iA6zE",
-      "targetHandle": null,
-      "id": "JDo7rVQq6"
-    },
-    {
-      "source": "LM_2iA6zE",
-      "sourceHandle": "1",
-      "target": "vxzO_ygp5",
-      "targetHandle": null,
-      "id": "MJ8L-WmTX"
-    },
-    {
-      "source": "QUxyLTu5i",
-      "sourceHandle": "1",
-      "target": "wz45xTgod",
-      "targetHandle": null,
-      "id": "Pz0xNc9g5"
-    },
-    {
-      "source": "QUxyLTu5i",
-      "sourceHandle": "2",
-      "target": "wz45xTgod",
-      "targetHandle": null,
-      "id": "MpCvWUgnT"
-    },
-    {
-      "source": "wz45xTgod",
-      "sourceHandle": "1",
-      "target": "HNp1djT3R",
-      "targetHandle": null,
-      "id": "wnZaeclWT"
-    },
-    {
-      "source": "wz45xTgod",
-      "sourceHandle": "2",
-      "target": "HNp1djT3R",
-      "targetHandle": null,
-      "id": "VVjDpSQvR"
-    },
-    {
-      "source": "vxzO_ygp5",
-      "sourceHandle": "1",
-      "target": "mgJ9boVok",
-      "targetHandle": null,
-      "id": "Dhg3CP2MH"
-    },
-    {
-      "source": "mgJ9boVok",
-      "sourceHandle": "2",
-      "target": "Pg35SLQ24",
-      "targetHandle": null,
-      "id": "Tfnuk0ipc"
-    },
-    {
-      "source": "Pg35SLQ24",
-      "sourceHandle": "1",
-      "target": "8TXyHYY89",
-      "targetHandle": null,
-      "id": "SAxJoYM8l"
-    },
-    {
-      "source": "8TXyHYY89",
-      "sourceHandle": "1",
-      "target": "TmwX5ZYzW",
-      "targetHandle": null,
-      "id": "h8pUweEE_"
-    },
-    {
-      "source": "8TXyHYY89",
-      "sourceHandle": "2",
-      "target": "rPh_b-un0",
-      "targetHandle": null,
-      "id": "vGtNeG30o"
-    },
-    {
-      "source": "Pg35SLQ24",
-      "sourceHandle": "2",
-      "target": "rPh_b-un0",
-      "targetHandle": null,
-      "id": "lLHZ__b8P"
     },
     {
       "source": "zsM_yHd09",
@@ -448,6 +143,41 @@
       "target": "mhEMXHzGM",
       "targetHandle": null,
       "id": "E1DkXpklR"
+    },
+    {
+      "source": "QUxyLTu5i",
+      "sourceHandle": "1",
+      "target": "HNp1djT3R",
+      "targetHandle": null,
+      "id": "F5wxWsBpr"
+    },
+    {
+      "source": "QUxyLTu5i",
+      "sourceHandle": "2",
+      "target": "HNp1djT3R",
+      "targetHandle": null,
+      "id": "AUmkhEYva"
+    },
+    {
+      "source": "HNp1djT3R",
+      "sourceHandle": "1",
+      "target": "GfIORVXGq",
+      "targetHandle": null,
+      "id": "VB3Z9oMrm"
+    },
+    {
+      "source": "HNp1djT3R",
+      "sourceHandle": "2",
+      "target": "GfIORVXGq",
+      "targetHandle": null,
+      "id": "a7L11sTQ6"
+    },
+    {
+      "source": "HNp1djT3R",
+      "sourceHandle": "3",
+      "target": "GfIORVXGq",
+      "targetHandle": null,
+      "id": "b6TLmus6n"
     }
   ]
 }

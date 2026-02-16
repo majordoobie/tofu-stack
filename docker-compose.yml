@@ -77,12 +77,14 @@ services:
     volumes:
       - ./mounts/gluetun:/gluetun
       - ./tofu-stack-secrets/gluten_auth_config.toml:/gluetun/auth/config.toml:ro
+      - gluetun-tmp:/tmp/gluetun
     environment:
       VPN_SERVICE_PROVIDER: protonvpn
       VPN_TYPE: openvpn
       SERVER_COUNTRIES: United States
       OPENVPN_USER_SECRETFILE: /run/secrets/openvpn_user
       OPENVPN_PASSWORD_SECRETFILE: /run/secrets/openvpn_pass
+      VPN_PORT_FORWARDING: on
       HTTPPROXY: on
       HTTPPROXY_LISTENING_ADDRESS: :8888
     secrets:
@@ -127,11 +129,14 @@ services:
     environment:
       !!merge <<: *common-env
       WEBUI_PORT: 8080
-      TORRENTING_PORT: 6881
+      QBITTORRENT_USER: ballsack
+      QBITTORRENT_PASS: adminadmin
     volumes:
       - ./mounts/qbittorrent/appdata:/config
       - ./tofu-stack-secrets/qBittorrent.conf:/config/qBittorrent/qBittorrent.conf
       - /Volumes/Working-Storage/downloads/torrents/:/data/torrents
+      - gluetun-tmp:/tmp/gluetun:ro
+      - ./tofu-stack-secrets/sync-qbittorrent-port.sh:/usr/local/bin/sync-qbittorrent-port.sh:ro
     network_mode: "service:gluetun" # Routes ALL traffic through gluetun (Traefik labels are on gluetun service)
     depends_on:
       gluetun:
@@ -145,6 +150,9 @@ services:
       timeout: 10s
     labels:
       - "autoheal=true"
+      - "ofelia.enabled=true"
+      - "ofelia.job-exec.qbittorrent-port-sync.schedule=0 */5 * * * *"
+      - "ofelia.job-exec.qbittorrent-port-sync.command=/usr/local/bin/sync-qbittorrent-port.sh"
     restart: unless-stopped
   # -----------------------------------------------------------------------------------
   # SABnzbd - Usenet downloader (replaced NZBGet due to SSL connection issues)
@@ -305,41 +313,41 @@ services:
   # -----------------------------------------------------------------------------------
   # Tdarr - Automated media transcoding (adds AAC audio tracks for HomePod compatibility)
   # -----------------------------------------------------------------------------------
-  # tdarr:
-  #   image: ghcr.io/haveagitgat/tdarr:latest
-  #   container_name: tdarr
-  #   cpus: 2
-  #   restart: unless-stopped
-  #   environment:
-  #     !!merge <<: *common-env
-  #     serverIP: 0.0.0.0
-  #     serverPort: 8266
-  #     webUIPort: 8265
-  #     internalNode: "false"
-  #     inContainer: "true"
-  #     ffmpegVersion: 7
-  #     nodeName: InternalNode
-  #   volumes:
-  #     - ./mounts/tdarr/server:/app/server
-  #     - ./mounts/tdarr/configs:/app/configs
-  #     - ./mounts/tdarr/logs:/app/logs
-  #     - /Volumes/Plex-Storage/media:/data_files
-  #     - /Volumes/Working-Storage/tdarr_cache:/temp # SSD - transcode cache
-  #   ports:
-  #     - 8265:8265 # Web UI
-  #     - 8266:8266 # Server port
-  #   networks:
-  #     - servarrnetwork
-  #   labels:
-  #     - "traefik.enable=true"
-  #     # tdarr - local
-  #     - "traefik.http.routers.tdarr.rule=Host(`tdarr.home.arpa`)"
-  #     - "traefik.http.routers.tdarr.entrypoints=websecure"
-  #     - "traefik.http.routers.tdarr.tls=true"
-  #     - "traefik.http.services.tdarr.loadbalancer.server.port=8265"
-  #     - "traefik.http.routers.tdarr-http.rule=Host(`tdarr.home.arpa`)"
-  #     - "traefik.http.routers.tdarr-http.entrypoints=web"
-  #     - "traefik.http.routers.tdarr-http.middlewares=redirect-to-https"
+  tdarr:
+    image: ghcr.io/haveagitgat/tdarr:latest
+    container_name: tdarr
+    cpus: 2
+    restart: unless-stopped
+    environment:
+      !!merge <<: *common-env
+      serverIP: 0.0.0.0
+      serverPort: 8266
+      webUIPort: 8265
+      internalNode: "false"
+      inContainer: "true"
+      ffmpegVersion: 7
+      nodeName: InternalNode
+    volumes:
+      - ./mounts/tdarr/server:/app/server
+      - ./mounts/tdarr/configs:/app/configs
+      - ./mounts/tdarr/logs:/app/logs
+      - /Volumes/Plex-Storage/media:/data_files
+      - /Volumes/Working-Storage/tdarr_cache:/temp # SSD - transcode cache
+    ports:
+      - 8265:8265 # Web UI
+      - 8266:8266 # Server port
+    networks:
+      - servarrnetwork
+    labels:
+      - "traefik.enable=true"
+      # tdarr - local
+      - "traefik.http.routers.tdarr.rule=Host(`tdarr.home.arpa`)"
+      - "traefik.http.routers.tdarr.entrypoints=websecure"
+      - "traefik.http.routers.tdarr.tls=true"
+      - "traefik.http.services.tdarr.loadbalancer.server.port=8265"
+      - "traefik.http.routers.tdarr-http.rule=Host(`tdarr.home.arpa`)"
+      - "traefik.http.routers.tdarr-http.entrypoints=web"
+      - "traefik.http.routers.tdarr-http.middlewares=redirect-to-https"
   # -----------------------------------------------------------------------------------
   # Tautulli - Plex monitoring and statistics
   # -----------------------------------------------------------------------------------
@@ -440,6 +448,35 @@ services:
       - "ofelia.enabled=true"
       - "ofelia.job-exec.recyclarr-sync.schedule=0 0 3 * * *"
       - "ofelia.job-exec.recyclarr-sync.command=recyclarr sync"
+  # -----------------------------------------------------------------------------------
+  # Huntarr - Actively searches for missing content in Radarr/Sonarr libraries
+  # -----------------------------------------------------------------------------------
+  huntarr:
+    image: huntarr/huntarr:latest
+    container_name: huntarr
+    restart: unless-stopped
+    environment:
+      !!merge <<: *common-env
+    volumes:
+      - ./mounts/huntarr:/config
+    ports:
+      - 9705:9705
+    networks:
+      - servarrnetwork
+    labels:
+      - "traefik.enable=true"
+      # huntarr - local
+      - "traefik.http.routers.huntarr.rule=Host(`huntarr.home.arpa`)"
+      - "traefik.http.routers.huntarr.entrypoints=websecure"
+      - "traefik.http.routers.huntarr.tls=true"
+      - "traefik.http.services.huntarr.loadbalancer.server.port=9705"
+      - "traefik.http.routers.huntarr-http.rule=Host(`huntarr.home.arpa`)"
+      - "traefik.http.routers.huntarr-http.entrypoints=web"
+      - "traefik.http.routers.huntarr-http.middlewares=redirect-to-https"
+      # huntarr - Cloudflare tunnel
+      - "traefik.http.routers.huntarr-cf.rule=Host(`huntarr.majordoob.com`)"
+      - "traefik.http.routers.huntarr-cf.entrypoints=web"
+      - "traefik.http.routers.huntarr-cf.service=huntarr"
 secrets:
   openvpn_user:
     file: tofu-stack-secrets/openvpn_user.txt
@@ -451,3 +488,5 @@ secrets:
     file: tofu-stack-secrets/nzbget_user.txt
   tunnel_token:
     file: tofu-stack-secrets/cloudflare_tunnel_key.txt
+volumes:
+  gluetun-tmp:
