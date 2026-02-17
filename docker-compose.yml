@@ -374,27 +374,28 @@ services:
       - "traefik.http.routers.tautulli-http.entrypoints=web"
       - "traefik.http.routers.tautulli-http.middlewares=redirect-to-https"
   # -----------------------------------------------------------------------------------
-  # overseerr - media request management for plex
+  # seerr - media request management for plex (migrated from overseerr)
   # -----------------------------------------------------------------------------------
-  overseerr:
-    image: lscr.io/linuxserver/overseerr:latest
-    container_name: overseerr
+  seerr:
+    image: ghcr.io/seerr-team/seerr:latest
+    container_name: seerr
+    init: true
     restart: unless-stopped
     environment:
-      !!merge <<: *common-env
+      TZ: America/New_York
     volumes:
-      - ./mounts/overseerr:/config
+      - ./mounts/overseerr:/app/config
     ports:
       - 5055:5055
     networks:
       - servarrnetwork
     labels:
       - "traefik.enable=true"
-      # overseerr - Cloudflare tunnel
-      - "traefik.http.routers.overseerr-cf.rule=Host(`overseerr.majordoob.com`)"
-      - "traefik.http.routers.overseerr-cf.entrypoints=web"
-      - "traefik.http.routers.overseerr-cf.service=overseerr"
-      - "traefik.http.services.overseerr.loadbalancer.server.port=5055"
+      # seerr - Cloudflare tunnel (keeping overseerr domain name)
+      - "traefik.http.routers.seerr-cf.rule=Host(`overseerr.majordoob.com`)"
+      - "traefik.http.routers.seerr-cf.entrypoints=web"
+      - "traefik.http.routers.seerr-cf.service=seerr"
+      - "traefik.http.services.seerr.loadbalancer.server.port=5055"
   # -----------------------------------------------------------------------------------
   # homepage
   # -----------------------------------------------------------------------------------
