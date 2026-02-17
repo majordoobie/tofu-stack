@@ -442,6 +442,7 @@ services:
       TZ: America/New_York
     volumes:
       - ./mounts/recyclarr:/config
+      - ./tofu-stack-secrets/recyclarr-secrets.yml:/config/secrets.yml:ro
     networks:
       - servarrnetwork
     labels:
