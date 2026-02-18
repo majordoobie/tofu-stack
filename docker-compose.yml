@@ -143,7 +143,7 @@ services:
         condition: service_healthy
         restart: true
     healthcheck:
-      test: ping -c 1 www.google.com || exit 1
+      test: ["CMD-SHELL", "timeout 5 curl -f https://1.1.1.1 || exit 1"]
       interval: 60s
       retries: 3
       start_period: 20s
@@ -287,6 +287,42 @@ services:
     networks:
       - servarrnetwork
   # -----------------------------------------------------------------------------------
+  # bazarr - subtitle management for sonarr and radarr
+  # -----------------------------------------------------------------------------------
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    restart: unless-stopped
+    environment:
+      !!merge <<: *common-env
+    volumes:
+      - ./mounts/bazarr:/config
+      - /Volumes/Plex-Storage/media:/media_files  # HDD - same path as sonarr/radarr
+    ports:
+      - 6767:6767
+    networks:
+      - servarrnetwork
+    healthcheck:
+      test: ["CMD-SHELL", "timeout 5 curl -f http://localhost:6767 || exit 1"]
+      interval: 60s
+      retries: 3
+      start_period: 30s
+      timeout: 10s
+    labels:
+      - "traefik.enable=true"
+      # bazarr - local
+      - "traefik.http.routers.bazarr.rule=Host(`bazarr.home.arpa`)"
+      - "traefik.http.routers.bazarr.entrypoints=websecure"
+      - "traefik.http.routers.bazarr.tls=true"
+      - "traefik.http.services.bazarr.loadbalancer.server.port=6767"
+      - "traefik.http.routers.bazarr-http.rule=Host(`bazarr.home.arpa`)"
+      - "traefik.http.routers.bazarr-http.entrypoints=web"
+      - "traefik.http.routers.bazarr-http.middlewares=redirect-to-https"
+      # bazarr - Cloudflare tunnel
+      - "traefik.http.routers.bazarr-cf.rule=Host(`bazarr.majordoob.com`)"
+      - "traefik.http.routers.bazarr-cf.entrypoints=web"
+      - "traefik.http.routers.bazarr-cf.service=bazarr"
+  # -----------------------------------------------------------------------------------
   # Jellyfin Media Server - runs natively on macOS (not in Docker)
   # Traefik routing configured in traefik-dynamic.yml
   # -----------------------------------------------------------------------------------
@@ -313,41 +349,41 @@ services:
   # -----------------------------------------------------------------------------------
   # Tdarr - Automated media transcoding (adds AAC audio tracks for HomePod compatibility)
   # -----------------------------------------------------------------------------------
-  tdarr:
-    image: ghcr.io/haveagitgat/tdarr:latest
-    container_name: tdarr
-    cpus: 2
-    restart: unless-stopped
-    environment:
-      !!merge <<: *common-env
-      serverIP: 0.0.0.0
-      serverPort: 8266
-      webUIPort: 8265
-      internalNode: "false"
-      inContainer: "true"
-      ffmpegVersion: 7
-      nodeName: InternalNode
-    volumes:
-      - ./mounts/tdarr/server:/app/server
-      - ./mounts/tdarr/configs:/app/configs
-      - ./mounts/tdarr/logs:/app/logs
-      - /Volumes/Plex-Storage/media:/data_files
-      - /Volumes/Working-Storage/tdarr_cache:/temp # SSD - transcode cache
-    ports:
-      - 8265:8265 # Web UI
-      - 8266:8266 # Server port
-    networks:
-      - servarrnetwork
-    labels:
-      - "traefik.enable=true"
-      # tdarr - local
-      - "traefik.http.routers.tdarr.rule=Host(`tdarr.home.arpa`)"
-      - "traefik.http.routers.tdarr.entrypoints=websecure"
-      - "traefik.http.routers.tdarr.tls=true"
-      - "traefik.http.services.tdarr.loadbalancer.server.port=8265"
-      - "traefik.http.routers.tdarr-http.rule=Host(`tdarr.home.arpa`)"
-      - "traefik.http.routers.tdarr-http.entrypoints=web"
-      - "traefik.http.routers.tdarr-http.middlewares=redirect-to-https"
+  # tdarr:
+  #   image: ghcr.io/haveagitgat/tdarr:latest
+  #   container_name: tdarr
+  #   cpus: 2
+  #   restart: unless-stopped
+  #   environment:
+  #     !!merge <<: *common-env
+  #     serverIP: 0.0.0.0
+  #     serverPort: 8266
+  #     webUIPort: 8265
+  #     internalNode: "false"
+  #     inContainer: "true"
+  #     ffmpegVersion: 7
+  #     nodeName: InternalNode
+  #   volumes:
+  #     - ./mounts/tdarr/server:/app/server
+  #     - ./mounts/tdarr/configs:/app/configs
+  #     - ./mounts/tdarr/logs:/app/logs
+  #     - /Volumes/Plex-Storage/media:/data_files
+  #     - /Volumes/Working-Storage/tdarr_cache:/temp # SSD - transcode cache
+  #   ports:
+  #     - 8265:8265 # Web UI
+  #     - 8266:8266 # Server port
+  #   networks:
+  #     - servarrnetwork
+  #   labels:
+  #     - "traefik.enable=true"
+  #     # tdarr - local
+  #     - "traefik.http.routers.tdarr.rule=Host(`tdarr.home.arpa`)"
+  #     - "traefik.http.routers.tdarr.entrypoints=websecure"
+  #     - "traefik.http.routers.tdarr.tls=true"
+  #     - "traefik.http.services.tdarr.loadbalancer.server.port=8265"
+  #     - "traefik.http.routers.tdarr-http.rule=Host(`tdarr.home.arpa`)"
+  #     - "traefik.http.routers.tdarr-http.entrypoints=web"
+  #     - "traefik.http.routers.tdarr-http.middlewares=redirect-to-https"
   # -----------------------------------------------------------------------------------
   # Tautulli - Plex monitoring and statistics
   # -----------------------------------------------------------------------------------
