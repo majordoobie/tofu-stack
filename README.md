@@ -116,12 +116,18 @@ launchctl unload ~/Library/LaunchAgents/com.homeassistant.bridge.plist
 launchctl unload ~/Library/LaunchAgents/com.homeassistant.bridge.plist && \
 launchctl load ~/Library/LaunchAgents/com.homeassistant.bridge.plist
 
-# Check if service is running
+# Check if service is running (PID shown = running, "-9" exit code = crashing)
 launchctl list | grep com.homeassistant.bridge
 
 # View live logs
 tail -f /tmp/ha_bridge.err
 ```
+
+> [!note]
+> After a reboot, socat may crash with exit code `-9` due to macOS resetting network permissions.
+> Fix: unload and reload the LaunchAgent (the restart triggers the permission re-grant).
+> If it keeps happening, check **System Settings → Privacy & Security → Local Network** and
+> ensure socat is allowed.
 
 
 #### Architecture
@@ -211,6 +217,18 @@ the active downloads and any transcoding done by *tdarr*. This has improve thing
 │   └── torrents
 └── torrents
 ```
+
+#### Recreate SSD Directory Structure
+
+After reformatting, run the following to recreate all required directories:
+
+```bash
+mkdir -p /Volumes/Working-Storage/downloads/usenet/{completed,intermediate,nzb,queue,tmp}
+mkdir -p /Volumes/Working-Storage/tdarr_cache
+```
+
+> [!note]
+> The volume mount in `docker-compose.yml` uses `usenet/` (not `nzbget/`). The tree above is outdated.
 
 When the *download client* finishes its download, *radarr* or *sonarr* will move it to the HDD
 
