@@ -38,6 +38,10 @@ services:
       - ./tofu-stack-secrets:/etc/traefik/dynamic:ro
       - ./mounts/traefik/certs:/certs
       - ./mounts/traefik/logs:/var/log/traefik
+      # Size-capped access-log rotation; run hourly by ofelia (labels below).
+      # access.log had reached 506 MB unrotated and records API keys passed as
+      # query params (sabnzbd/radarr ?apikey=...), so it must not grow unbounded.
+      - ./mounts/traefik/rotate-logs.sh:/usr/local/bin/rotate-logs.sh:ro
     networks:
       - servarrnetwork
     labels:
@@ -55,6 +59,10 @@ services:
       # Traefik dashboard - Cloudflare tunnel
       - "traefik.http.routers.traefik-dashboard-cf.rule=Host(`traefik.majordoob.com`)"
       - "traefik.http.routers.traefik-dashboard-cf.entrypoints=web"
+      # access-log rotation - hourly size check (6-field cron: sec min hour dom mon dow)
+      - "ofelia.enabled=true"
+      - "ofelia.job-exec.traefik-logrotate.schedule=0 0 * * * *"
+      - "ofelia.job-exec.traefik-logrotate.command=/bin/sh /usr/local/bin/rotate-logs.sh"
       - "traefik.http.routers.traefik-dashboard-cf.service=api@internal"
     environment:
       !!merge <<: *common-env
@@ -126,6 +134,9 @@ services:
     image: lscr.io/linuxserver/qbittorrent:latest
     container_name: qbittorrent
     cpus: 1
+    # qBit's SIGTERM shutdown can take 60-90s with a large torrent count; default 10s
+    # triggers SIGKILL mid-shutdown, which has left it in a bad Exited state in the past.
+    stop_grace_period: 90s
     environment:
       !!merge <<: *common-env
       WEBUI_PORT: 8080
@@ -134,7 +145,13 @@ services:
     volumes:
       - ./mounts/qbittorrent/appdata:/config
       - ./tofu-stack-secrets/qBittorrent.conf:/config/qBittorrent/qBittorrent.conf
-      - /Volumes/Plex-Storage/downloads/torrents/:/data/torrents
+      # create_host_path: false -> fail fast if the external drive isn't mounted,
+      # instead of silently creating an empty dir on the boot SSD.
+      - type: bind
+        source: /Volumes/Plex-Storage/downloads/torrents
+        target: /data/torrents
+        bind:
+          create_host_path: false
       - gluetun-tmp:/tmp/gluetun:ro
       - ./tofu-stack-secrets/sync-qbittorrent-port.sh:/usr/local/bin/sync-qbittorrent-port.sh:ro
     network_mode: "service:gluetun" # Routes ALL traffic through gluetun (Traefik labels are on gluetun service)
@@ -155,6 +172,42 @@ services:
       - "ofelia.job-exec.qbittorrent-port-sync.command=/usr/local/bin/sync-qbittorrent-port.sh"
     restart: unless-stopped
   # -----------------------------------------------------------------------------------
+  # qbit-watchdog - Recovers qBittorrent from two failure modes that nothing else catches:
+  #   1) Exited/dead state. autoheal only restarts running-but-unhealthy containers, and
+  #      Docker's restart policy doesn't fire after a manual `docker restart` API call.
+  #   2) Orphaned network namespace. When gluetun is restarted in-place (e.g. by autoheal),
+  #      it gets a new netns but qBit keeps the old one. qBit's own healthcheck passes
+  #      (localhost in the orphan still works) but the published port 8080 lands on a
+  #      dead listener in gluetun's new netns, breaking sonarr/radarr → qbit. Detect by
+  #      checking that the qBit listener is visible inside gluetun's current netns; if
+  #      not, `docker restart qbittorrent` to re-attach.
+  # Polls every 60s.
+  # -----------------------------------------------------------------------------------
+  qbit-watchdog:
+    image: docker:cli
+    container_name: qbit-watchdog
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command:
+      - sh
+      - -c
+      - |
+        while true; do
+          state=$$(docker inspect -f '{{.State.Status}}' qbittorrent 2>/dev/null || echo missing)
+          if [ "$$state" = "exited" ] || [ "$$state" = "dead" ]; then
+            echo "[$$(date -Iseconds)] qbittorrent state=$$state, starting"
+            docker start qbittorrent || echo "[$$(date -Iseconds)] start failed"
+          elif [ "$$state" = "running" ]; then
+            gluetun_state=$$(docker inspect -f '{{.State.Status}}' gluetun 2>/dev/null || echo missing)
+            if [ "$$gluetun_state" = "running" ] && ! docker exec gluetun netstat -tln 2>/dev/null | grep -q ':8080 '; then
+              echo "[$$(date -Iseconds)] qbit listener missing from gluetun netns (orphaned), restarting qbittorrent"
+              docker restart qbittorrent || echo "[$$(date -Iseconds)] restart failed"
+            fi
+          fi
+          sleep 60
+        done
+  # -----------------------------------------------------------------------------------
   # SABnzbd - Usenet downloader (replaced NZBGet due to SSL connection issues)
   # -----------------------------------------------------------------------------------
   sabnzbd:
@@ -165,7 +218,11 @@ services:
       !!merge <<: *common-env
     volumes:
       - ./mounts/sabnzbd:/config
-      - /Volumes/Working-Storage/downloads/usenet/:/data/usenet
+      - type: bind
+        source: /Volumes/Working-Storage/downloads/usenet
+        target: /data/usenet
+        bind:
+          create_host_path: false
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "timeout 5 curl -f http://localhost:8080 || exit 1"]
@@ -183,6 +240,12 @@ services:
       - "traefik.http.routers.sabnzbd-http.rule=Host(`sabnzbd.home.arpa`)"
       - "traefik.http.routers.sabnzbd-http.entrypoints=web"
       - "traefik.http.routers.sabnzbd-http.middlewares=redirect-to-https"
+      # sabnzbd routing - Cloudflare tunnel (TLS terminates at Cloudflare, so entrypoint is `web`)
+      # NOTE: also requires (a) a Public Hostname in the Cloudflare Zero Trust dashboard and
+      # (b) sabnzbd.majordoob.com in SABnzbd's host_whitelist + inet_exposure raised.
+      - "traefik.http.routers.sabnzbd-cf.rule=Host(`sabnzbd.majordoob.com`)"
+      - "traefik.http.routers.sabnzbd-cf.entrypoints=web"
+      - "traefik.http.routers.sabnzbd-cf.service=sabnzbd"
     ports:
       - 8085:8080
     networks:
@@ -236,10 +299,33 @@ services:
     environment:
       !!merge <<: *common-env
     volumes:
-      - ./mounts/sonarr:/config
-      - /Volumes/Plex-Storage/downloads/torrents:/data/torrents  # HDD - hardlinks work
-      - /Volumes/Working-Storage/downloads/usenet:/data/usenet  # SSD - copy+delete ok
-      - /Volumes/Plex-Storage/media/:/media_files               # HDD
+      - sonarr-config:/config
+      # Single parent mount: /data/media and /data/downloads/torrents live under ONE mount,
+      # which is what makes hardlinks possible. Separate bind mounts fail cross-device even
+      # on the same host volume. See AGENTS.md -> HARDLINKS.
+      - type: bind
+        source: /Volumes/Plex-Storage
+        target: /data
+        bind:
+          create_host_path: false
+      # HDD - legacy path, retained during migration
+      - type: bind
+        source: /Volumes/Plex-Storage/downloads/torrents
+        target: /data/torrents
+        bind:
+          create_host_path: false
+      # SSD - copy+delete ok
+      - type: bind
+        source: /Volumes/Working-Storage/downloads/usenet
+        target: /data/usenet
+        bind:
+          create_host_path: false
+      # HDD
+      - type: bind
+        source: /Volumes/Plex-Storage/media
+        target: /media_files
+        bind:
+          create_host_path: false
     labels:
       - "traefik.enable=true"
       # sonarr - local
@@ -268,9 +354,31 @@ services:
       !!merge <<: *common-env
     volumes:
       - ./mounts/radarr:/config
-      - /Volumes/Plex-Storage/downloads/torrents:/data/torrents  # HDD - hardlinks work
-      - /Volumes/Working-Storage/downloads/usenet:/data/usenet  # SSD - copy+delete ok
-      - /Volumes/Plex-Storage/media/:/media_files               # HDD
+      # Single parent mount: /data/media and /data/downloads/torrents live under ONE mount,
+      # which is what makes hardlinks possible. See AGENTS.md -> HARDLINKS.
+      - type: bind
+        source: /Volumes/Plex-Storage
+        target: /data
+        bind:
+          create_host_path: false
+      # HDD - legacy path, retained during migration
+      - type: bind
+        source: /Volumes/Plex-Storage/downloads/torrents
+        target: /data/torrents
+        bind:
+          create_host_path: false
+      # SSD - copy+delete ok
+      - type: bind
+        source: /Volumes/Working-Storage/downloads/usenet
+        target: /data/usenet
+        bind:
+          create_host_path: false
+      # HDD
+      - type: bind
+        source: /Volumes/Plex-Storage/media
+        target: /media_files
+        bind:
+          create_host_path: false
     labels:
       - "traefik.enable=true"
       # radarr - local
@@ -299,7 +407,18 @@ services:
       !!merge <<: *common-env
     volumes:
       - ./mounts/bazarr:/config
-      - /Volumes/Plex-Storage/media:/media_files  # HDD - same path as sonarr/radarr
+      # Single parent mount - keeps bazarr's paths aligned with sonarr/radarr after migration
+      - type: bind
+        source: /Volumes/Plex-Storage
+        target: /data
+        bind:
+          create_host_path: false
+      # HDD - legacy path, retained during migration
+      - type: bind
+        source: /Volumes/Plex-Storage/media
+        target: /media_files
+        bind:
+          create_host_path: false
     ports:
       - 6767:6767
     networks:
@@ -328,6 +447,41 @@ services:
   # Jellyfin Media Server - runs natively on macOS (not in Docker)
   # Traefik routing configured in traefik-dynamic.yml
   # -----------------------------------------------------------------------------------
+  # -----------------------------------------------------------------------------------
+  # Unpackerr - Extracts archived torrent downloads for Sonarr imports
+  # -----------------------------------------------------------------------------------
+  unpackerr:
+    image: golift/unpackerr:latest
+    container_name: unpackerr
+    restart: unless-stopped
+    user: "501:20"
+    environment:
+      !!merge <<: *common-env
+      UN_LOG_FILE: /data/torrents/unpackerr.log
+      UN_SONARR_0_URL: http://sonarr:8989
+      UN_SONARR_0_API_KEY: filepath:/run/secrets/sonarr_api_key
+      # Must match the path Sonarr reports post-hardlink-migration (single /data mount)
+      UN_SONARR_0_PATHS_0: /data/downloads/torrents/tv
+      UN_SONARR_0_PROTOCOLS: torrent,TorrentDownloadProtocol
+    volumes:
+      # Single parent mount - unpackerr must see the same paths sonarr reports post-migration
+      - type: bind
+        source: /Volumes/Plex-Storage
+        target: /data
+        bind:
+          create_host_path: false
+      # legacy path, retained during migration
+      - type: bind
+        source: /Volumes/Plex-Storage/downloads/torrents
+        target: /data/torrents
+        bind:
+          create_host_path: false
+    secrets:
+      - sonarr_api_key
+    networks:
+      - servarrnetwork
+    depends_on:
+      - sonarr
   # -----------------------------------------------------------------------------------
   # Cloudflare Tunnel - Secure external access without port forwarding
   # -----------------------------------------------------------------------------------
@@ -386,31 +540,9 @@ services:
   #     - "traefik.http.routers.tdarr-http.rule=Host(`tdarr.home.arpa`)"
   #     - "traefik.http.routers.tdarr-http.entrypoints=web"
   #     - "traefik.http.routers.tdarr-http.middlewares=redirect-to-https"
-  # -----------------------------------------------------------------------------------
-  # Tautulli - Plex monitoring and statistics
-  # -----------------------------------------------------------------------------------
-  tautulli:
-    image: lscr.io/linuxserver/tautulli:latest
-    container_name: tautulli
-    restart: unless-stopped
-    environment:
-      !!merge <<: *common-env
-    volumes:
-      - ./mounts/tautulli:/config
-    ports:
-      - 8181:8181
-    networks:
-      - servarrnetwork
-    labels:
-      - "traefik.enable=true"
-      # tautulli - local
-      - "traefik.http.routers.tautulli.rule=Host(`tautulli.home.arpa`)"
-      - "traefik.http.routers.tautulli.entrypoints=websecure"
-      - "traefik.http.routers.tautulli.tls=true"
-      - "traefik.http.services.tautulli.loadbalancer.server.port=8181"
-      - "traefik.http.routers.tautulli-http.rule=Host(`tautulli.home.arpa`)"
-      - "traefik.http.routers.tautulli-http.entrypoints=web"
-      - "traefik.http.routers.tautulli-http.middlewares=redirect-to-https"
+  # Tautulli removed 2026-07-30 (Plex stats no longer tracked here).
+  # Config backed up to /Users/tanjiro/containers/backups/tautulli-config-*.tar.gz;
+  # ./mounts/tautulli retained on disk as a snapshot. Freed port 8181.
   # -----------------------------------------------------------------------------------
   # seerr - media request management for plex (migrated from overseerr)
   # -----------------------------------------------------------------------------------
@@ -442,14 +574,25 @@ services:
     container_name: homepage
     environment:
       !!merge <<: *common-env
-      HOMEPAGE_ALLOWED_HOSTS: 192.168.1.2:3000,homepage.majordoob.com
+      HOMEPAGE_ALLOWED_HOSTS: 192.168.1.2:3000,homepage.home.arpa,homepage.majordoob.com
     ports:
       - 3000:3000
     volumes:
       - ./mounts/homepage/:/app/config
       - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - servarrnetwork
     labels:
       - "traefik.enable=true"
+      # homepage - local
+      - "traefik.http.routers.homepage.rule=Host(`homepage.home.arpa`)"
+      - "traefik.http.routers.homepage.entrypoints=websecure"
+      - "traefik.http.routers.homepage.tls=true"
+      - "traefik.http.routers.homepage.service=homepage"
+      - "traefik.http.routers.homepage-http.rule=Host(`homepage.home.arpa`)"
+      - "traefik.http.routers.homepage-http.entrypoints=web"
+      - "traefik.http.routers.homepage-http.middlewares=redirect-to-https"
+      - "traefik.http.routers.homepage-http.service=homepage"
       # homepage - Cloudflare tunnel
       - "traefik.http.routers.homepage-cf.rule=Host(`homepage.majordoob.com`)"
       - "traefik.http.routers.homepage-cf.entrypoints=web"
@@ -498,7 +641,7 @@ services:
     environment:
       !!merge <<: *common-env
     volumes:
-      - ./mounts/huntarr:/config
+      - huntarr-config:/config
     ports:
       - 9705:9705
     networks:
@@ -517,6 +660,47 @@ services:
       - "traefik.http.routers.huntarr-cf.rule=Host(`huntarr.majordoob.com`)"
       - "traefik.http.routers.huntarr-cf.entrypoints=web"
       - "traefik.http.routers.huntarr-cf.service=huntarr"
+  # -----------------------------------------------------------------------------------
+  # Pinchflat - YouTube channel archiver for Plex (kid-safe curated content)
+  # Downloads videos + Plex-compatible NFO/thumbnail metadata so Plex can index them
+  # -----------------------------------------------------------------------------------
+  pinchflat:
+    # Pinned: `latest` tag is missing arm64 manifests (amd64-only)
+    image: ghcr.io/kieraneglin/pinchflat:v2025.6.6
+    container_name: pinchflat
+    restart: unless-stopped
+    environment:
+      !!merge <<: *common-env
+      TZ: America/New_York
+    volumes:
+      - ./mounts/pinchflat:/config
+      - type: bind
+        source: /Volumes/Plex-Storage/media/youtube
+        target: /downloads
+        bind:
+          create_host_path: false
+      # yt-dlp needs a JS runtime for YouTube player deobfuscation; pinchflat image lacks one.
+      - ./mounts/pinchflat/bin/deno:/usr/local/bin/deno:ro
+    ports:
+      - 8945:8945
+    networks:
+      - servarrnetwork
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS --max-time 5 http://localhost:8945/ >/dev/null || exit 1"]
+      interval: 60s
+      retries: 3
+      start_period: 30s
+      timeout: 10s
+    labels:
+      - "traefik.enable=true"
+      # pinchflat - local
+      - "traefik.http.routers.pinchflat.rule=Host(`pinchflat.home.arpa`)"
+      - "traefik.http.routers.pinchflat.entrypoints=websecure"
+      - "traefik.http.routers.pinchflat.tls=true"
+      - "traefik.http.services.pinchflat.loadbalancer.server.port=8945"
+      - "traefik.http.routers.pinchflat-http.rule=Host(`pinchflat.home.arpa`)"
+      - "traefik.http.routers.pinchflat-http.entrypoints=web"
+      - "traefik.http.routers.pinchflat-http.middlewares=redirect-to-https"
 secrets:
   openvpn_user:
     file: tofu-stack-secrets/openvpn_user.txt
@@ -528,5 +712,13 @@ secrets:
     file: tofu-stack-secrets/nzbget_user.txt
   tunnel_token:
     file: tofu-stack-secrets/cloudflare_tunnel_key.txt
+  sonarr_api_key:
+    file: tofu-stack-secrets/sonarr_api_key.txt
 volumes:
   gluetun-tmp:
+  sonarr-config:
+    external: true
+    name: tofu-stack_sonarr-config
+  huntarr-config:
+    external: true
+    name: tofu-stack_huntarr-config

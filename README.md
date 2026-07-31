@@ -2,7 +2,14 @@
 Tofu Stack is a Arr stack that runs on a M2 Mac Mini with 2 extral drives. A 2TB SSD where active download
 and transcoding take placed. And a 16TB HDD where media is stored.
 
-## Cloudflare Access
+## Cloudflare Tunnel (network layer)
+
+> [!note]
+> This section used to be titled "Cloudflare Access", which was misleading — everything below
+> describes the **Tunnel**, which is network-level protection (no inbound ports). That is a
+> different thing from **Cloudflare Access**, which is identity-level protection (who may log in).
+> Access is documented in its own section further down.
+
 I am using a Cloudflare domain and Cloudflare zero access tools to manage access to my resources. To begin,
 my services can only be access via Cloudlfare edge therefore scanning my home network is impossible as no ports
 are exposed.
@@ -24,6 +31,93 @@ Cloudflare Edge → Cloudflare Tunnel → cloudflared Container → Traefik → 
   - No need for double encryption inside your local network
 
   The routing from *.majordoob.com → traefik:80 is configured in the Cloudflare Zero Trust Dashboard (Networks → Tunnels), not locally.
+
+
+## Cloudflare Access (identity layer)
+
+The tunnel above stops anyone from *scanning* my network, but by itself it does **not** ask who you are.
+Anything with a Public Hostname is reachable by the whole internet — the only thing standing in the way is
+whatever login the app itself has. Cloudflare Access is the layer that puts an identity check in front,
+before traffic ever reaches the server.
+
+> [!IMPORTANT]
+> **State as of 2026-07-30: there is NO Access application configured on any hostname.**
+> Verified with the probe below — every hostname passed straight through to the origin.
+> So right now each service is protected only by its own login, and a couple have none:
+> `homepage` serves a bare 200, and `sonarr` serves its UI shell unauthenticated
+> (its API still requires a key and does not leak it, so that one is inert).
+
+### Verifying whether Access is actually on
+
+Do not judge this by "I visited the site and wasn't asked to log in" — if a policy bypasses your home
+IP, a protected site looks identical to an unprotected one from inside the house. Use this instead:
+
+```bash
+curl -s -o /dev/null -w '%{http_code}\n' https://<svc>.majordoob.com/cdn-cgi/access/get-identity
+```
+
+Cloudflare's edge answers `/cdn-cgi/access/*` itself whenever Access is enabled on that hostname,
+**even if a policy would let you bypass**. So:
+
+| Result | Meaning |
+|---|---|
+| `401` / `403` | Access IS enabled (you just have no session) |
+| `200` | Access IS enabled and you have a valid session |
+| `404` (origin's 404 page) | **No Access app** — request fell through to Traefik |
+| `000` | hostname not reachable at all (no tunnel Public Hostname) |
+
+### Creating an application + policy
+
+**Zero Trust → Access → Applications → Add an application → Self-hosted**
+
+- **Application domain**: `majordoob.com` plus the subdomain, or leave the subdomain blank and use a
+  wildcard to cover everything at once
+- **Session duration**: 24h is a reasonable default
+
+Then **Add a policy**. The rule groups mean different things and this is the part that is easy to get
+wrong:
+
+- **Include** — *who* is allowed (matches if ANY entry matches)
+- **Require** — an extra condition that must ALSO hold
+- **Exclude** — hard deny
+
+The policy I want (family access, US only):
+
+| Field | Value |
+|---|---|
+| Policy name | `family` |
+| Action | **Allow** |
+| Include | Emails → my address, my dad's address |
+| Require | Country → United States |
+
+That reads as "these specific emails, and only when they are physically in the US."
+
+An identity provider is required. **One-time PIN** is on by default and just emails a login code —
+least friction for a family member who does not want another account.
+
+### Things that break behind Access
+
+> [!WARN]
+> **Do not put Plex or Jellyfin behind Access.** Their native apps (TV, phone, Roku) cannot complete
+> a browser-based login flow and will simply fail to connect. Exclude those hostnames.
+
+Same problem for anything hit programmatically — mobile *Arr apps, API scripts. If you need those,
+add a second policy with **Action: Service Auth** and a **Service Token**, and send the
+`CF-Access-Client-Id` / `CF-Access-Client-Secret` headers.
+
+Good candidates to gate: `qbittorrent`, `sabnzbd`, `traefik`, `homepage`, `prowlarr`.
+qBittorrent especially — see the security note in `AGENTS.md`; its WebUI can run programs on
+download completion, so it should never sit on the public internet without a gate in front.
+
+### Exposing a new service on majordoob.com
+
+Takes three things, all required — see `AGENTS.md` for the full detail:
+
+1. Traefik router labels on the service (entrypoint `web`, since TLS terminates at Cloudflare)
+2. A **Public Hostname** in Zero Trust → Networks → Tunnels (this is the step that is easy to forget;
+   a working Traefik router with no tunnel hostname returns `000`)
+3. The app's own host whitelist (SABnzbd `host_whitelist` + `inet_exposure`,
+   homepage `HOMEPAGE_ALLOWED_HOSTS`, qBittorrent `WebUI\ServerDomains`)
 
 
 ## Traefik + cloudflared
