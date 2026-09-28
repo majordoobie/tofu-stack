@@ -308,16 +308,16 @@ services:
         target: /data
         bind:
           create_host_path: false
-      # HDD - legacy path, retained during migration
-      - type: bind
-        source: /Volumes/Plex-Storage/downloads/torrents
-        target: /data/torrents
-        bind:
-          create_host_path: false
-      # SSD - copy+delete ok
+      # NOTE: no nested /data/torrents bind - it silently fails to materialize at
+      # boot. Torrents are reached via /data/downloads/torrents through the parent
+      # mount above; the gluetun remote path mapping rewrites what qBittorrent reports.
+      # SSD - copy+delete ok. MUST be top-level, NOT nested under /data:
+      # OrbStack virtiofs silently drops binds nested inside another bind, and
+      # usenet is on a different volume so no path under /data can reach it.
+      # Remote path mapping (sabnzbd: /data/usenet/ -> /usenet/) bridges the names.
       - type: bind
         source: /Volumes/Working-Storage/downloads/usenet
-        target: /data/usenet
+        target: /usenet
         bind:
           create_host_path: false
       # HDD
@@ -361,16 +361,16 @@ services:
         target: /data
         bind:
           create_host_path: false
-      # HDD - legacy path, retained during migration
-      - type: bind
-        source: /Volumes/Plex-Storage/downloads/torrents
-        target: /data/torrents
-        bind:
-          create_host_path: false
-      # SSD - copy+delete ok
+      # NOTE: no nested /data/torrents bind - it silently fails to materialize at
+      # boot. Torrents are reached via /data/downloads/torrents through the parent
+      # mount above; the gluetun remote path mapping rewrites what qBittorrent reports.
+      # SSD - copy+delete ok. MUST be top-level, NOT nested under /data:
+      # OrbStack virtiofs silently drops binds nested inside another bind, and
+      # usenet is on a different volume so no path under /data can reach it.
+      # Remote path mapping (sabnzbd: /data/usenet/ -> /usenet/) bridges the names.
       - type: bind
         source: /Volumes/Working-Storage/downloads/usenet
-        target: /data/usenet
+        target: /usenet
         bind:
           create_host_path: false
       # HDD
@@ -457,7 +457,10 @@ services:
     user: "501:20"
     environment:
       !!merge <<: *common-env
-      UN_LOG_FILE: /data/torrents/unpackerr.log
+      # Must resolve through the single /data parent - a nested /data/torrents bind
+      # silently fails to materialize at boot (see AGENTS.md), which broke log writes
+      # with "input/output error".
+      UN_LOG_FILE: /data/downloads/torrents/unpackerr.log
       UN_SONARR_0_URL: http://sonarr:8989
       UN_SONARR_0_API_KEY: filepath:/run/secrets/sonarr_api_key
       # Must match the path Sonarr reports post-hardlink-migration (single /data mount)
@@ -468,12 +471,6 @@ services:
       - type: bind
         source: /Volumes/Plex-Storage
         target: /data
-        bind:
-          create_host_path: false
-      # legacy path, retained during migration
-      - type: bind
-        source: /Volumes/Plex-Storage/downloads/torrents
-        target: /data/torrents
         bind:
           create_host_path: false
     secrets:
@@ -572,6 +569,7 @@ services:
   homepage:
     image: ghcr.io/gethomepage/homepage:latest
     container_name: homepage
+    restart: unless-stopped
     environment:
       !!merge <<: *common-env
       HOMEPAGE_ALLOWED_HOSTS: 192.168.1.2:3000,homepage.home.arpa,homepage.majordoob.com
