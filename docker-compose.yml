@@ -90,9 +90,16 @@ services:
       VPN_SERVICE_PROVIDER: protonvpn
       VPN_TYPE: openvpn
       SERVER_COUNTRIES: United States
+      # Pinned to Chicago servers that forward the port on the SAME IP as egress in repeated
+      # tests (2026-10-24: 130 5/5, 304 4/4, 300 3/3, 320 3/4). Proton assigns IPs per
+      # connection, so this improves the odds but is not a guarantee — qbit-watchdog.sh
+      # detects an unreachable port and reconnects. See AGENTS.md (IPTorrents hit-and-runs).
+      SERVER_HOSTNAMES: node-us-130.protonvpn.net,node-us-304.protonvpn.net,node-us-300.protonvpn.net,node-us-320.protonvpn.net
       OPENVPN_USER_SECRETFILE: /run/secrets/openvpn_user
       OPENVPN_PASSWORD_SECRETFILE: /run/secrets/openvpn_pass
       VPN_PORT_FORWARDING: on
+      # Only connect to P2P servers - non-P2P servers hand out a port but never deliver traffic to it
+      PORT_FORWARD_ONLY: on
       HTTPPROXY: on
       HTTPPROXY_LISTENING_ADDRESS: :8888
     secrets:
@@ -181,7 +188,10 @@ services:
   #      dead listener in gluetun's new netns, breaking sonarr/radarr → qbit. Detect by
   #      checking that the qBit listener is visible inside gluetun's current netns; if
   #      not, `docker restart qbittorrent` to re-attach.
-  # Polls every 60s.
+  #   3) Unreachable from outside. Every ~5 min it connects to <VPN public IP>:<forwarded
+  #      port> — the address trackers give peers. After 3 straight failures it reconnects
+  #      gluetun + qbittorrent (Proton servers often forward on a different IP than egress).
+  # Logic lives in qbit-watchdog.sh. Polls every 60s.
   # -----------------------------------------------------------------------------------
   qbit-watchdog:
     image: docker:cli
@@ -189,24 +199,8 @@ services:
     restart: unless-stopped
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-    command:
-      - sh
-      - -c
-      - |
-        while true; do
-          state=$$(docker inspect -f '{{.State.Status}}' qbittorrent 2>/dev/null || echo missing)
-          if [ "$$state" = "exited" ] || [ "$$state" = "dead" ]; then
-            echo "[$$(date -Iseconds)] qbittorrent state=$$state, starting"
-            docker start qbittorrent || echo "[$$(date -Iseconds)] start failed"
-          elif [ "$$state" = "running" ]; then
-            gluetun_state=$$(docker inspect -f '{{.State.Status}}' gluetun 2>/dev/null || echo missing)
-            if [ "$$gluetun_state" = "running" ] && ! docker exec gluetun netstat -tln 2>/dev/null | grep -q ':8080 '; then
-              echo "[$$(date -Iseconds)] qbit listener missing from gluetun netns (orphaned), restarting qbittorrent"
-              docker restart qbittorrent || echo "[$$(date -Iseconds)] restart failed"
-            fi
-          fi
-          sleep 60
-        done
+      - ./qbit-watchdog.sh:/qbit-watchdog.sh:ro
+    command: ["sh", "/qbit-watchdog.sh"]
   # -----------------------------------------------------------------------------------
   # SABnzbd - Usenet downloader (replaced NZBGet due to SSL connection issues)
   # -----------------------------------------------------------------------------------
@@ -486,7 +480,9 @@ services:
     image: cloudflare/cloudflared:latest
     container_name: cloudflared
     restart: unless-stopped
-    command: tunnel run --token-file /run/secrets/tunnel_token
+    # http2 (TCP), not the default QUIC (UDP): QUIC connections kept going silently dead through
+    # OrbStack's UDP NAT under qBittorrent's DHT/uTP load -> all 4 conns dropped -> 502s.
+    command: tunnel --protocol http2 run --token-file /run/secrets/tunnel_token
     secrets:
       - tunnel_token
     networks:
